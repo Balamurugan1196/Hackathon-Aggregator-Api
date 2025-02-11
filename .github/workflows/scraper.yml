@@ -3,7 +3,7 @@ name: Run Scraper Daily
 on:
   schedule:
     - cron: "0 0 * * *"  # Runs every day at midnight UTC
-  workflow_dispatch:  # Allows manual triggering
+  workflow_dispatch:
 
 jobs:
   scrape:
@@ -21,14 +21,14 @@ jobs:
         run: |
           pip install -r requirements.txt
 
-      - name: Run the scraper
+      - name: Debug GitHub Secrets
         run: |
-          python Scrapper.py  # Change to your actual script name
+          echo "MONGO_USER=${{ secrets.MONGO_USER }}"
+          echo "MONGO_PASS=${{ secrets.MONGO_PASS }}"
 
-      - name: Commit and push results
+      - name: Run the scraper
+        env:
+          MONGO_USER: ${{ secrets.MONGO_USER }}
+          MONGO_PASS: ${{ secrets.MONGO_PASS }}
         run: |
-          git config --global user.name "Balamurugan1196"  # Change this to your GitHub username
-          git config --global user.email "balamuruganb0207@gmail.com"  # Use your GitHub email
-          git add .
-          git commit -m "Automated data update"
-          git push
+          python Scrapper.py
