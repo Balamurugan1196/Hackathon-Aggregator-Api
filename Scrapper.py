@@ -18,6 +18,8 @@ db = client["hackathonDB"]
 collection = db["events"]
 
 # ✅ Clear existing data to avoid duplication
+collection.delete_many({})
+print("Database cleared before inserting new data.")
 
 
 # ✅ Configure Chrome for GitHub Actions (Headless Mode)
