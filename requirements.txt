@@ -1,5 +1,4 @@
-scrapy
 flask
 requests
-beautifulsoup4
 pymongo
+selenium
