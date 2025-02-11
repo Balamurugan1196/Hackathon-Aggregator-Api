@@ -8,9 +8,9 @@ import re
 import os
 import urllib.parse
 
-# ✅ Secure MongoDB Credentials (Read from Environment Variables)
-username = urllib.parse.quote_plus(os.getenv("MONGO_USER", "admin"))  # Default: admin
-password = urllib.parse.quote_plus(os.getenv("MONGO_PASS", "password"))  # Replace with your actual password or use GitHub Secrets
+# ✅ Retrieve MongoDB credentials from GitHub Secrets
+username = urllib.parse.quote_plus(os.getenv("MONGO_USER", ""))
+password = urllib.parse.quote_plus(os.getenv("MONGO_PASS", ""))
 
 # ✅ Connect to MongoDB Atlas
 client = MongoClient(f"mongodb+srv://{username}:{password}@hackathondb.hwg5w.mongodb.net/?retryWrites=true&w=majority&appName=hackathondb")
