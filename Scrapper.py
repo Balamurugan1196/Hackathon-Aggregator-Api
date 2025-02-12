@@ -38,7 +38,7 @@ url = "https://devpost.com/hackathons"
 driver.get(url)
 
 # ✅ Wait for initial hackathons to load using WebDriverWait
-wait = WebDriverWait(driver, 15)
+wait = WebDriverWait(driver, 30)
 wait.until(EC.presence_of_element_located((By.CLASS_NAME, "hackathon-tile")))
 
 # ✅ Scroll logic to load more hackathons
