@@ -36,11 +36,11 @@ url = "https://devpost.com/hackathons"
 driver.get(url)
 
 # ✅ Wait for initial hackathons to load
-time.sleep(5)
+time.sleep(10)
 
 # ✅ Scroll logic to load more hackathons
 SCROLL_COUNT = 20  # Maximum number of scrolls
-SCROLL_PAUSE_TIME = 3  # Time to wait after each scroll
+SCROLL_PAUSE_TIME = 5  # Time to wait after each scroll
 previous_count = 0  # Track previous number of events
 
 for _ in range(SCROLL_COUNT):
