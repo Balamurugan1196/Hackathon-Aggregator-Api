@@ -42,7 +42,7 @@ wait = WebDriverWait(driver, 30)
 wait.until(EC.presence_of_element_located((By.CLASS_NAME, "hackathon-tile")))
 
 # ✅ Scroll logic to load more hackathons
-SCROLL_COUNT = 30  # Maximum number of scrolls
+SCROLL_COUNT = 40  # Maximum number of scrolls
 MIN_HACKATHONS = 50  # Target number of hackathons
 SCROLL_PAUSE_TIME = 5  # Time to wait after each scroll
 
@@ -55,14 +55,12 @@ for _ in range(SCROLL_COUNT):
     time.sleep(SCROLL_PAUSE_TIME)  
     events = driver.find_elements(By.CLASS_NAME, "hackathon-tile")
     
-    print(f"Scroll {_+1}: Found {len(events)} hackathons")
+    
     
     # ✅ If no new hackathons appear, stop scrolling
-    if len(events) == previous_count:
-        print("No new hackathons loaded. Stopping scroll.")
-        break
     
-    previous_count = len(events)  # Update count
+    
+    
 
     # ✅ Stop if we reach the required number
     if len(events) >= MIN_HACKATHONS:
