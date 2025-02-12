@@ -39,7 +39,7 @@ driver.get(url)
 time.sleep(10)
 
 # ✅ Scroll logic to load more hackathons
-SCROLL_COUNT = 20  # Maximum number of scrolls
+SCROLL_COUNT = 30  # Maximum number of scrolls
 SCROLL_PAUSE_TIME = 4  # Time to wait after each scroll
 
 
