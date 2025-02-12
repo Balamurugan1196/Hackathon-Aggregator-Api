@@ -37,7 +37,7 @@ url = "https://devpost.com/hackathons"
 driver.get(url)
 
 # ✅ Wait for hackathons to load
-time.sleep(8)
+time.sleep(15)
 
 # ✅ Scrape hackathon details
 events = driver.find_elements(By.CLASS_NAME, "hackathon-tile")
