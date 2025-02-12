@@ -40,8 +40,8 @@ time.sleep(10)
 
 # ✅ Scroll logic to load more hackathons
 SCROLL_COUNT = 20  # Maximum number of scrolls
-SCROLL_PAUSE_TIME = 5  # Time to wait after each scroll
-previous_count = 0  # Track previous number of events
+SCROLL_PAUSE_TIME = 4  # Time to wait after each scroll
+
 
 for _ in range(SCROLL_COUNT):
     driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
@@ -49,14 +49,10 @@ for _ in range(SCROLL_COUNT):
     
     events = driver.find_elements(By.CLASS_NAME, "hackathon-tile")
     
-    if len(events) >= 100:
+    if len(events) >= 50:
         break  # Stop if we have enough events
     
-    if len(events) == previous_count:
-        break  # Stop if no new events are loaded
     
-    previous_count = len(events)  # Update the count
-
 # ✅ Scrape hackathon details
 scraped_events = []
 for event in events:
