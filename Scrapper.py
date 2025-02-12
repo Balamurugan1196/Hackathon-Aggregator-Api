@@ -40,7 +40,7 @@ time.sleep(10)
 
 # ✅ Scroll logic to load more hackathons
 SCROLL_COUNT = 30  # Maximum number of scrolls
-SCROLL_PAUSE_TIME = 4  # Time to wait after each scroll
+SCROLL_PAUSE_TIME = 6  # Time to wait after each scroll
 
 
 for _ in range(SCROLL_COUNT):
@@ -51,6 +51,7 @@ for _ in range(SCROLL_COUNT):
     
     if len(events) >= 50:
         break  # Stop if we have enough events
+   
     
     
 # ✅ Scrape hackathon details
