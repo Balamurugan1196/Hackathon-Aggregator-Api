@@ -2,6 +2,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from pymongo import MongoClient
@@ -29,7 +30,7 @@ chrome_options.add_argument("--headless")  # Run in headless mode (no GUI)
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 
-# ✅ Set up Chrome WebDriver service (Use Default Path for Linux/Ubuntu)
+# ✅ Set up Chrome WebDriver service
 service = Service("/usr/bin/chromedriver")
 driver = webdriver.Chrome(service=service, options=chrome_options)
 
@@ -37,75 +38,80 @@ driver = webdriver.Chrome(service=service, options=chrome_options)
 url = "https://devpost.com/hackathons"
 driver.get(url)
 
-# ✅ Wait for initial hackathons to load using WebDriverWait
-wait = WebDriverWait(driver, 30)
-wait.until(EC.presence_of_element_located((By.CLASS_NAME, "hackathon-tile")))
+# ✅ Wait for page to load
+WebDriverWait(driver, 15).until(EC.presence_of_all_elements_located((By.CLASS_NAME, "hackathon-tile")))
 
-# ✅ Scroll logic to load more hackathons
-SCROLL_COUNT = 40  # Maximum number of scrolls
-MIN_HACKATHONS = 50  # Target number of hackathons
-SCROLL_PAUSE_TIME = 5  # Time to wait after each scroll
+# ✅ Scroll dynamically to load more hackathons
+prev_count = 0
+scroll_attempts = 0
+while True:
+    # Scroll to bottom
+    driver.find_element(By.TAG_NAME, "body").send_keys(Keys.END)
+    time.sleep(2)  # Wait for new content to load
 
-previous_count = 0  # Track number of events before scrolling
-
-for _ in range(SCROLL_COUNT):
-    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-    
-    # ✅ Wait for new elements to load after scrolling
-    time.sleep(SCROLL_PAUSE_TIME)  
+    # ✅ Get updated list of hackathons
     events = driver.find_elements(By.CLASS_NAME, "hackathon-tile")
-    
-    
-    
-    # ✅ If no new hackathons appear, stop scrolling
-    
-    
-    
+    current_count = len(events)
 
-    # ✅ Stop if we reach the required number
-    if len(events) >= MIN_HACKATHONS:
-        break  
+    print(f"Scroll Attempt {scroll_attempts + 1}: Found {current_count} hackathons")
 
-# ✅ Scrape hackathon details
+    # ✅ Stop when no more new hackathons load
+    if current_count == prev_count:
+        break
+
+    prev_count = current_count
+    scroll_attempts += 1
+
+print(f"Final Total Hackathons Found: {len(events)}")  # Debugging
+
 scraped_events = []
+
 for event in events:
-    name = event.find_element(By.CSS_SELECTOR, "h3.mb-4").text
-    date_text = event.find_element(By.CLASS_NAME, "submission-period").text  
-
-    # ✅ Extract start_date and end_date with proper format handling
-    date_match = re.search(r"(\w+ \d{1,2})(?:, (\d{4}))? - (\w+ \d{1,2}, \d{4})", date_text)
-    if date_match:
-        start_date, start_year, end_date = date_match.groups()
-        if not start_year:
-            start_date += f", {end_date.split()[-1]}"  # Add year if missing
-    else:
-        start_date, end_date = date_text, "Not available"
-
-    # ✅ Extract mode & location
-    location_info = event.find_element(By.CLASS_NAME, "info").text
-    mode = "Online" if "online" in location_info.lower() else "Offline"
-    location = "None" if mode == "Online" else location_info
-
-    # ✅ Extract prize amount
     try:
-        prize = event.find_element(By.CLASS_NAME, "prize-amount").text
-    except:
-        prize = "Not mentioned"
+        # ✅ Scroll into view for each event
+        driver.execute_script("arguments[0].scrollIntoView();", event)
+        time.sleep(1)
 
-    # ✅ Extract apply link
-    apply_link = event.find_element(By.TAG_NAME, "a").get_attribute("href")
+        name = event.find_element(By.CSS_SELECTOR, "h3.mb-4").text
+        date_text = event.find_element(By.CLASS_NAME, "submission-period").text  
 
-    hackathon_data = {
-        "name": name,
-        "start_date": start_date,
-        "end_date": end_date,
-        "mode": mode,
-        "location": location,
-        "prize_money": prize,
-        "apply_link": apply_link
-    }
+        # ✅ Extract start_date and end_date
+        date_match = re.search(r"(\w+ \d{1,2})(?:, (\d{4}))? - (\w+ \d{1,2}, \d{4})", date_text)
+        if date_match:
+            start_date, start_year, end_date = date_match.groups()
+            if not start_year:
+                start_date += f", {end_date.split()[-1]}"  # Add year if missing
+        else:
+            start_date, end_date = date_text, "Not available"
 
-    scraped_events.append(hackathon_data)
+        # ✅ Extract mode & location
+        location_info = event.find_element(By.CLASS_NAME, "info").text
+        mode = "Online" if "online" in location_info.lower() else "Offline"
+        location = "None" if mode == "Online" else location_info
+
+        # ✅ Extract prize amount (if available)
+        try:
+            prize = event.find_element(By.CLASS_NAME, "prize-amount").text
+        except:
+            prize = "Not mentioned"
+
+        # ✅ Extract apply link
+        apply_link = event.find_element(By.TAG_NAME, "a").get_attribute("href")
+
+        hackathon_data = {
+            "name": name,
+            "start_date": start_date,
+            "end_date": end_date,
+            "mode": mode,
+            "location": location,
+            "prize_money": prize,
+            "apply_link": apply_link
+        }
+
+        scraped_events.append(hackathon_data)
+
+    except Exception as e:
+        print(f"Skipping one event due to error: {e}")
 
 # ✅ Insert into MongoDB
 if scraped_events:
