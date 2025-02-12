@@ -1,15 +1,17 @@
 from flask import Flask, jsonify, request
 from pymongo import MongoClient
 import urllib.parse
+import os
 
 app = Flask(__name__)
 
-# ✅ Encode MongoDB Credentials
-username = urllib.parse.quote_plus("admin")  # Your MongoDB username
-password = urllib.parse.quote_plus("Bala@9952")  # Your MongoDB password
-
+# ✅ Retrieve MongoDB credentials from GitHub Secrets
+username = "admin"
+password = "Bala@9952"
+eusername = urllib.parse.quote_plus(username)
+epassword = urllib.parse.quote_plus(password)
 # ✅ Connect to MongoDB Atlas
-client = MongoClient(f"mongodb+srv://{username}:{password}@hackathondb.hwg5w.mongodb.net/?retryWrites=true&w=majority&appName=hackathondb")
+client = MongoClient(f"mongodb+srv://{eusername}:{epassword}@hackathondb.hwg5w.mongodb.net/?retryWrites=true&w=majority&appName=hackathondb")
 db = client["hackathonDB"]
 collection = db["events"]
 

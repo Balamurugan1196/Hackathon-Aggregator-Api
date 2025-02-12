@@ -45,7 +45,7 @@ events = driver.find_elements(By.CLASS_NAME, "hackathon-tile")
 scraped_events = []
 
 for event in events:
-    name = event.find_element(By.CLASS_NAME, "mb-4").text
+    name = event.find_element(By.CSS_SELECTOR, "h3.mb-4").text
     date_text = event.find_element(By.CLASS_NAME, "submission-period").text  
 
     # ✅ Extract start_date and end_date with proper format handling
