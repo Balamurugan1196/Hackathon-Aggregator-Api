@@ -2,6 +2,8 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from pymongo import MongoClient
 import time  
 import re
@@ -35,25 +37,37 @@ driver = webdriver.Chrome(service=service, options=chrome_options)
 url = "https://devpost.com/hackathons"
 driver.get(url)
 
-# ✅ Wait for initial hackathons to load
-time.sleep(10)
+# ✅ Wait for initial hackathons to load using WebDriverWait
+wait = WebDriverWait(driver, 15)
+wait.until(EC.presence_of_element_located((By.CLASS_NAME, "hackathon-tile")))
 
 # ✅ Scroll logic to load more hackathons
 SCROLL_COUNT = 30  # Maximum number of scrolls
-SCROLL_PAUSE_TIME = 10  # Time to wait after each scroll
+MIN_HACKATHONS = 50  # Target number of hackathons
+SCROLL_PAUSE_TIME = 5  # Time to wait after each scroll
 
+previous_count = 0  # Track number of events before scrolling
 
 for _ in range(SCROLL_COUNT):
     driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-    time.sleep(SCROLL_PAUSE_TIME)
     
+    # ✅ Wait for new elements to load after scrolling
+    time.sleep(SCROLL_PAUSE_TIME)  
     events = driver.find_elements(By.CLASS_NAME, "hackathon-tile")
     
-    if len(events) >= 50:
-        break  # Stop if we have enough events
-   
+    print(f"Scroll {_+1}: Found {len(events)} hackathons")
     
+    # ✅ If no new hackathons appear, stop scrolling
+    if len(events) == previous_count:
+        print("No new hackathons loaded. Stopping scroll.")
+        break
     
+    previous_count = len(events)  # Update count
+
+    # ✅ Stop if we reach the required number
+    if len(events) >= MIN_HACKATHONS:
+        break  
+
 # ✅ Scrape hackathon details
 scraped_events = []
 for event in events:
