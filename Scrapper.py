@@ -21,7 +21,6 @@ collection = db["events"]
 collection.delete_many({})
 print("Database cleared before inserting new data.")
 
-
 # ✅ Configure Chrome for GitHub Actions (Headless Mode)
 chrome_options = Options()
 chrome_options.add_argument("--headless")  # Run in headless mode (no GUI)
@@ -36,14 +35,30 @@ driver = webdriver.Chrome(service=service, options=chrome_options)
 url = "https://devpost.com/hackathons"
 driver.get(url)
 
-# ✅ Wait for hackathons to load
-time.sleep(15)
+# ✅ Wait for initial hackathons to load
+time.sleep(5)
+
+# ✅ Scroll logic to load more hackathons
+SCROLL_COUNT = 20  # Maximum number of scrolls
+SCROLL_PAUSE_TIME = 3  # Time to wait after each scroll
+previous_count = 0  # Track previous number of events
+
+for _ in range(SCROLL_COUNT):
+    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+    time.sleep(SCROLL_PAUSE_TIME)
+    
+    events = driver.find_elements(By.CLASS_NAME, "hackathon-tile")
+    
+    if len(events) >= 100:
+        break  # Stop if we have enough events
+    
+    if len(events) == previous_count:
+        break  # Stop if no new events are loaded
+    
+    previous_count = len(events)  # Update the count
 
 # ✅ Scrape hackathon details
-events = driver.find_elements(By.CLASS_NAME, "hackathon-tile")
-
 scraped_events = []
-
 for event in events:
     name = event.find_element(By.CSS_SELECTOR, "h3.mb-4").text
     date_text = event.find_element(By.CLASS_NAME, "submission-period").text  
