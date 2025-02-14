@@ -41,34 +41,33 @@ driver.get(url)
 # ✅ Wait for page to load
 WebDriverWait(driver, 15).until(EC.presence_of_all_elements_located((By.CLASS_NAME, "hackathon-tile")))
 
-# ✅ Scroll dynamically to load more hackathons
+# ✅ Scroll dynamically until at least 50 or 100 hackathons are loaded
+TARGET_COUNT = 100  # Change to 50 if needed
+MAX_SCROLLS = 30  # Prevent infinite scrolling
 prev_count = 0
 scroll_attempts = 0
-while True:
-    # Scroll to bottom
-    driver.find_element(By.TAG_NAME, "body").send_keys(Keys.END)
+
+while len(driver.find_elements(By.CLASS_NAME, "hackathon-tile")) < TARGET_COUNT and scroll_attempts < MAX_SCROLLS:
+    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
     time.sleep(2)  # Wait for new content to load
-
-    # ✅ Get updated list of hackathons
-    events = driver.find_elements(By.CLASS_NAME, "hackathon-tile")
-    current_count = len(events)
-
-    print(f"Scroll Attempt {scroll_attempts + 1}: Found {current_count} hackathons")
-
-    # ✅ Stop when no more new hackathons load
-    if current_count == prev_count:
+    
+    current_count = len(driver.find_elements(By.CLASS_NAME, "hackathon-tile"))
+    print(f"Scroll {scroll_attempts + 1}: Found {current_count} hackathons")
+    
+    if current_count == prev_count:  # No new hackathons loaded
         break
-
+    
     prev_count = current_count
     scroll_attempts += 1
 
-print(f"Final Total Hackathons Found: {len(events)}")  # Debugging
+print(f"Final Total Hackathons Found: {len(driver.find_elements(By.CLASS_NAME, 'hackathon-tile'))}")
 
+# ✅ Extract Hackathon Data
 scraped_events = []
+events = driver.find_elements(By.CLASS_NAME, "hackathon-tile")[:TARGET_COUNT]
 
 for event in events:
     try:
-        # ✅ Scroll into view for each event
         driver.execute_script("arguments[0].scrollIntoView();", event)
         time.sleep(1)
 
@@ -80,7 +79,7 @@ for event in events:
         if date_match:
             start_date, start_year, end_date = date_match.groups()
             if not start_year:
-                start_date += f", {end_date.split()[-1]}"  # Add year if missing
+                start_date += f", {end_date.split()[-1]}"
         else:
             start_date, end_date = date_text, "Not available"
 
