@@ -33,21 +33,30 @@ WebDriverWait(driver, 15).until(EC.presence_of_all_elements_located((By.CLASS_NA
 
 # Dynamic Scrolling to Load More Hackathons
 TARGET_COUNT = 50  # Change to 100 if needed
-scroll_attempts, max_attempts = 0, 50  # Try up to 50 scrolls
+scroll_attempts, max_attempts = 0, 50
 prev_count = 0
 
-while len(driver.find_elements(By.CLASS_NAME, "hackathon-tile")) < TARGET_COUNT and scroll_attempts < max_attempts:
-    driver.execute_script("window.scrollBy(0, 500);")  # Scroll down step by step
-    time.sleep(5)  # Wait for new elements to load
-
+while True:
     events = driver.find_elements(By.CLASS_NAME, "hackathon-tile")
     current_count = len(events)
 
-    print(f"Scroll Attempt {scroll_attempts + 1}: Found {current_count} hackathons")
+    if current_count >= TARGET_COUNT:
+        print(f"✅ Loaded {current_count} hackathons. Stopping scroll.")
+        break  # Stop scrolling once we have enough hackathons
 
-    # Continue until we reach at least TARGET_COUNT
+    if current_count == prev_count:
+        scroll_attempts += 1
+        if scroll_attempts >= max_attempts:
+            print("⚠️ Reached max scroll attempts. Stopping.")
+            break  # Prevent infinite loop
+
     prev_count = current_count
-    scroll_attempts += 1
+
+    # Scroll to the last loaded hackathon to trigger lazy loading
+    driver.execute_script("arguments[0].scrollIntoView();", events[-1])
+    time.sleep(3)  # Allow time for new hackathons to load
+
+    print(f"🔄 Scroll Attempt {scroll_attempts}: Found {current_count} hackathons.")
 
 # Scraping Data
 scraped_events = []
