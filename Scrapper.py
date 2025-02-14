@@ -51,10 +51,8 @@ while len(driver.find_elements(By.CLASS_NAME, "hackathon-tile")) < TARGET_COUNT 
     print(f"Scroll Attempt {scroll_attempts + 1}: Found {len(events)} hackathons")
 
     # Stop if no new hackathons loaded
-    if len(events) == prev_count:
-        break
-
-    prev_count = len(events)
+    
+    
     scroll_attempts += 1
 
 print(f"Total Hackathons Loaded: {len(events)}")
