@@ -28,6 +28,8 @@ service = Service("/usr/bin/chromedriver")
 driver = webdriver.Chrome(service=service, options=chrome_options)
 
 driver.get("https://devpost.com/hackathons")
+
+# Ensure initial content loads
 WebDriverWait(driver, 15).until(EC.presence_of_all_elements_located((By.CLASS_NAME, "hackathon-tile")))
 
 # Dynamic Scrolling
@@ -36,12 +38,22 @@ scroll_attempts, max_attempts = 0, 30
 prev_count = 0
 
 while len(driver.find_elements(By.CLASS_NAME, "hackathon-tile")) < TARGET_COUNT and scroll_attempts < max_attempts:
-    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-    time.sleep(4)  # Allow time for new content to load
+    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")  # Scroll to bottom
+    time.sleep(3)  # Give time for content to load
+
+    # Wait for new elements to appear
+    WebDriverWait(driver, 5).until(
+        lambda d: len(d.find_elements(By.CLASS_NAME, "hackathon-tile")) > prev_count
+    )
+
     events = driver.find_elements(By.CLASS_NAME, "hackathon-tile")
     
-     # Stiop if no new hackathons load
-    
+    print(f"Scroll Attempt {scroll_attempts + 1}: Found {len(events)} hackathons")
+
+    # Stop if no new hackathons loaded
+    if len(events) == prev_count:
+        break
+
     prev_count = len(events)
     scroll_attempts += 1
 
