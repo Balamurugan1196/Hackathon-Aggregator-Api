@@ -29,7 +29,7 @@ driver = webdriver.Chrome(service=service, options=chrome_options)
 driver.get("https://devpost.com/hackathons")
 
 # Ensure initial content loads
-WebDriverWait(driver, 15).until(EC.presence_of_all_elements_located((By.CLASS_NAME, "hackathon-tile")))
+WebDriverWait(driver, 30).until(EC.presence_of_all_elements_located((By.CLASS_NAME, "hackathon-tile")))
 
 # Dynamic Scrolling to Load More Hackathons
 TARGET_COUNT = 50  # Change to 100 if needed
