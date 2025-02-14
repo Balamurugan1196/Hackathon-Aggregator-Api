@@ -44,7 +44,11 @@ while True:
         print(f"✅ Loaded {current_count} hackathons. Stopping scroll.")
         break  # Stop scrolling once we have enough hackathons
 
-    
+    if current_count == prev_count:
+        scroll_attempts += 1
+        if scroll_attempts >= max_attempts:
+            print("⚠️ Reached max scroll attempts. Stopping.")
+            break  # Prevent infinite loop
 
     prev_count = current_count
 
