@@ -31,34 +31,39 @@ driver.get("https://devpost.com/hackathons")
 # Ensure initial content loads
 WebDriverWait(driver, 15).until(EC.presence_of_all_elements_located((By.CLASS_NAME, "hackathon-tile")))
 
-# Dynamic Scrolling to Load More Hackathons
+# Dynamic Scrolling
 TARGET_COUNT = 50  # Change to 100 if needed
-scroll_attempts, max_attempts = 0, 50
+scroll_attempts, max_attempts = 50  # Increase attempts for more reliability
 prev_count = 0
 
-while True:
+while len(driver.find_elements(By.CLASS_NAME, "hackathon-tile")) < TARGET_COUNT and scroll_attempts > 0:
+    driver.execute_script("window.scrollBy(0, 300);")  # Small scroll down
+    time.sleep(2)  # Wait for elements to load
+    
+    driver.execute_script("window.scrollBy(0, 500);")  # Medium scroll down
+    time.sleep(3)
+
+    driver.execute_script("window.scrollBy(0, 700);")  # Large scroll down
+    time.sleep(4)
+
     events = driver.find_elements(By.CLASS_NAME, "hackathon-tile")
-    current_count = len(events)
+    
+    print(f"Scroll Attempt {51 - scroll_attempts}: Found {len(events)} hackathons")
 
-    if current_count >= TARGET_COUNT:
-        print(f"✅ Loaded {current_count} hackathons. Stopping scroll.")
-        break  # Stop scrolling once we have enough hackathons
+    # Stop if no new hackathons are loaded after multiple scrolls
+    if len(events) == prev_count:
+        print("⚠️ No more hackathons found. Trying one last deep scroll...")
+        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")  # Force deep scroll
+        time.sleep(5)
+        events = driver.find_elements(By.CLASS_NAME, "hackathon-tile")
+        if len(events) == prev_count:  # Still no new items
+            print("🚨 No more hackathons available. Stopping.")
+            break
 
-    if current_count == prev_count:
-        scroll_attempts += 1
-        if scroll_attempts >= max_attempts:
-            print("⚠️ No more hackathons found. Stopping.")
-            break  # Stop if no new events are appearing
+    prev_count = len(events)  # Update count
+    scroll_attempts -= 1  # Decrease attempts
 
-    prev_count = current_count
-
-    # Scroll to the last loaded hackathon to trigger lazy loading
-    if events:
-        driver.execute_script("arguments[0].scrollIntoView();", events[-1])
-
-    time.sleep(3)  # Allow time for new hackathons to load
-
-    print(f"🔄 Scroll Attempt {scroll_attempts}: Found {current_count} hackathons.")
+print(f"✅ Total Hackathons Loaded: {len(events)}")
 
 # Scraping Data
 scraped_events = []
@@ -68,7 +73,7 @@ for event in events[:TARGET_COUNT]:
         time.sleep(1)
         name = event.find_element(By.CSS_SELECTOR, "h3.mb-4").text
         date_text = event.find_element(By.CLASS_NAME, "submission-period").text  
-
+        
         # Extract Start & End Dates
         date_match = re.search(r"(\w+ \d{1,2})(?:, (\d{4}))? - (\w+ \d{1,2}, \d{4})", date_text)
         if date_match:
@@ -77,21 +82,21 @@ for event in events[:TARGET_COUNT]:
                 start_date += f", {end_date.split()[-1]}"  # Add missing year
         else:
             start_date, end_date = date_text, "Not available"
-
+        
         # Extract Mode & Location
         location_info = event.find_element(By.CLASS_NAME, "info").text
         mode = "Online" if "online" in location_info.lower() else "Offline"
         location = "None" if mode == "Online" else location_info
-
+        
         # Extract Prize Money
         try:
             prize = event.find_element(By.CLASS_NAME, "prize-amount").text
         except:
             prize = "Not mentioned"
-
+        
         # Extract Apply Link
         apply_link = event.find_element(By.TAG_NAME, "a").get_attribute("href")
-
+        
         scraped_events.append({
             "name": name,
             "start_date": start_date,
@@ -107,6 +112,6 @@ for event in events[:TARGET_COUNT]:
 # Insert Data into MongoDB
 if scraped_events:
     collection.insert_many(scraped_events)
-    print(f"{len(scraped_events)} hackathons stored in MongoDB successfully!")
+    print(f"✅ {len(scraped_events)} hackathons stored in MongoDB successfully!")
 
 driver.quit()
