@@ -29,7 +29,7 @@ driver = webdriver.Chrome(service=service, options=chrome_options)
 driver.get("https://devpost.com/hackathons")
 
 # Ensure initial content loads
-WebDriverWait(driver, 30).until(EC.presence_of_all_elements_located((By.CLASS_NAME, "hackathon-tile")))
+WebDriverWait(driver, 15).until(EC.presence_of_all_elements_located((By.CLASS_NAME, "hackathon-tile")))
 
 # Dynamic Scrolling to Load More Hackathons
 TARGET_COUNT = 50  # Change to 100 if needed
@@ -47,13 +47,15 @@ while True:
     if current_count == prev_count:
         scroll_attempts += 1
         if scroll_attempts >= max_attempts:
-            print("⚠️ Reached max scroll attempts. Stopping.")
-            break  # Prevent infinite loop
+            print("⚠️ No more hackathons found. Stopping.")
+            break  # Stop if no new events are appearing
 
     prev_count = current_count
 
     # Scroll to the last loaded hackathon to trigger lazy loading
-    driver.execute_script("arguments[0].scrollIntoView();", events[-1])
+    if events:
+        driver.execute_script("arguments[0].scrollIntoView();", events[-1])
+
     time.sleep(3)  # Allow time for new hackathons to load
 
     print(f"🔄 Scroll Attempt {scroll_attempts}: Found {current_count} hackathons.")
