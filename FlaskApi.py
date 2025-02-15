@@ -5,9 +5,10 @@ import os
 
 app = Flask(__name__)
 
-# ✅ Retrieve MongoDB credentials from Render Environment Variables
-username = urllib.parse.quote_plus(os.getenv("MONGO_USER", ""))
-password = urllib.parse.quote_plus(os.getenv("MONGO_PASS", ""))
+# Get MongoDB credentials from environment variables
+username = os.getenv("MONGO_USER")
+password = os.getenv("MONGO_PASS")
+
 mongodb_url = f"mongodb+srv://{username}:{password}@hackathondb.hwg5w.mongodb.net/?retryWrites=true&w=majority&appName=hackathondb"
 
 # ✅ Connect to MongoDB Atlas
