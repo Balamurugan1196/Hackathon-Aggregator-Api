@@ -2,6 +2,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from pymongo import MongoClient
@@ -20,20 +21,21 @@ collection.delete_many({})  # Clear old data
 
 # Chrome WebDriver Setup
 chrome_options = Options()
-chrome_options.add_argument("--headless")
+chrome_options.add_argument("--headless")  # Run in background
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 service = Service("/usr/bin/chromedriver")
 driver = webdriver.Chrome(service=service, options=chrome_options)
 
+# Open Devpost Hackathons Page
 driver.get("https://devpost.com/hackathons")
 
-# Ensure initial content loads
+# Ensure Initial Content Loads
 WebDriverWait(driver, 15).until(EC.presence_of_all_elements_located((By.CLASS_NAME, "hackathon-tile")))
 
 # Dynamic Scrolling to Load More Hackathons
-TARGET_COUNT = 50  # Change to 100 if needed
-scroll_attempts, max_attempts = 0, 50
+TARGET_COUNT = 100  # Adjust as needed
+scroll_attempts, max_attempts = 0, 30
 prev_count = 0
 
 while True:
@@ -42,17 +44,21 @@ while True:
 
     if current_count >= TARGET_COUNT:
         print(f"✅ Loaded {current_count} hackathons. Stopping scroll.")
-        break  # Stop scrolling once we have enough hackathons
+        break
 
     if current_count == prev_count:
         scroll_attempts += 1
         if scroll_attempts >= max_attempts:
             print("⚠️ No more hackathons found. Stopping.")
-            break  # Stop if no new events are appearing
+            break
 
     prev_count = current_count
 
-    # Scroll to the last loaded hackathon to trigger lazy loading
+    # Scroll Down using PAGE_DOWN multiple times before scrolling into view
+    for _ in range(3):
+        driver.find_element(By.TAG_NAME, "body").send_keys(Keys.PAGE_DOWN)
+        time.sleep(1)
+
     if events:
         driver.execute_script("arguments[0].scrollIntoView();", events[-1])
 
@@ -107,6 +113,6 @@ for event in events[:TARGET_COUNT]:
 # Insert Data into MongoDB
 if scraped_events:
     collection.insert_many(scraped_events)
-    print(f"{len(scraped_events)} hackathons stored in MongoDB successfully!")
+    print(f"{len(scraped_events)} hackathons stored in MongoDB successfully! 🚀")
 
 driver.quit()
