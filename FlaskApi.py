@@ -5,13 +5,13 @@ import os
 
 app = Flask(__name__)
 
-# ✅ Retrieve MongoDB credentials from GitHub Secrets
-username = "admin"
-password = "Bala@9952"
-eusername = urllib.parse.quote_plus(username)
-epassword = urllib.parse.quote_plus(password)
+# ✅ Retrieve MongoDB credentials from Render Environment Variables
+username = urllib.parse.quote_plus(os.getenv("MONGO_USER", ""))
+password = urllib.parse.quote_plus(os.getenv("MONGO_PASS", ""))
+mongodb_url = f"mongodb+srv://{username}:{password}@hackathondb.hwg5w.mongodb.net/?retryWrites=true&w=majority&appName=hackathondb"
+
 # ✅ Connect to MongoDB Atlas
-client = MongoClient(f"mongodb+srv://{eusername}:{epassword}@hackathondb.hwg5w.mongodb.net/?retryWrites=true&w=majority&appName=hackathondb")
+client = MongoClient(mongodb_url)
 db = client["hackathonDB"]
 collection = db["events"]
 
@@ -53,5 +53,7 @@ def filter_hackathons():
     results = list(collection.find(filters, {"_id": 0}))
     return jsonify(results)
 
+# ✅ Run Flask App on Render
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 10000))  # Default port 10000 if not set
+    app.run(host='0.0.0.0', port=port)
