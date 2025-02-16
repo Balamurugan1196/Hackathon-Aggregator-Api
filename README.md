@@ -1,4 +1,4 @@
-### 🚀 Hackathon-Aggregator-Api ###
+## 🚀 Hackathon-Aggregator-Api ##
 ## 📌 Project Overview ##
 Hackathon Aggregator API is a Flask-based API that provides real-time data on upcoming hackathons.
 It scrapes fresh data daily from the Devpost website using a custom web scraper and updates the database automatically.
