@@ -5,8 +5,9 @@ import os
 app = Flask(__name__)
 
 # ✅ Get MongoDB credentials from environment variables
-username = os.getenv("MONGO_USER")
-password = os.getenv("MONGO_PASS")
+username = urllib.parse.quote_plus(os.getenv("MONGO_USER", ""))
+password = urllib.parse.quote_plus(os.getenv("MONGO_PASS", ""))
+
 
 if not username or not password:
     raise ValueError("❌ MongoDB credentials are missing. Set MONGO_USER and MONGO_PASS.")
