@@ -1,20 +1,31 @@
 from flask import Flask, jsonify, request
 from pymongo import MongoClient
-import urllib.parse
 import os
 
 app = Flask(__name__)
 
-# Get MongoDB credentials from environment variables
+# ✅ Get MongoDB credentials from environment variables
 username = os.getenv("MONGO_USER")
 password = os.getenv("MONGO_PASS")
+
+if not username or not password:
+    raise ValueError("❌ MongoDB credentials are missing. Set MONGO_USER and MONGO_PASS.")
 
 mongodb_url = f"mongodb+srv://{username}:{password}@hackathondb.hwg5w.mongodb.net/?retryWrites=true&w=majority&appName=hackathondb"
 
 # ✅ Connect to MongoDB Atlas
-client = MongoClient(mongodb_url)
-db = client["hackathonDB"]
-collection = db["events"]
+try:
+    client = MongoClient(mongodb_url)
+    db = client["hackathonDB"]
+    collection = db["events"]
+    print("✅ Connected to MongoDB successfully!")
+except Exception as e:
+    raise Exception(f"❌ MongoDB Connection Failed: {str(e)}")
+
+# ✅ Health Check Route
+@app.route('/health', methods=['GET'])
+def health_check():
+    return jsonify({"status": "running"}), 200
 
 # ✅ Route: Get All Hackathons
 @app.route('/hackathons', methods=['GET'])
@@ -48,17 +59,18 @@ def filter_hackathons():
         filters["mode"] = mode
     if location:
         filters["location"] = location
+
     if min_prize:
-     try:
-        min_prize = int(min_prize.replace("₹", "").replace(",", "").strip())  # Remove currency symbols & commas
-        filters["prize_money"] = {"$gte": min_prize}
-     except ValueError:
-        return jsonify({"error": "Invalid prize amount"}), 400
+        try:
+            min_prize = int(min_prize.replace("₹", "").replace(",", "").strip())  # Normalize prize format
+            filters["prize_money"] = {"$gte": min_prize}
+        except ValueError:
+            return jsonify({"error": "Invalid prize amount"}), 400
 
     results = list(collection.find(filters, {"_id": 0}))
     return jsonify(results)
 
-# ✅ Run Flask App on Render
+# ✅ Run Flask App on Render or Local
 if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 10000))  # Default port 10000 if not set
+    port = int(os.environ.get("PORT", 10000))  # Default to port 10000 if not set
     app.run(host='0.0.0.0', port=port)
