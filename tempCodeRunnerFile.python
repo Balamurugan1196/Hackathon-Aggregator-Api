@@ -1,0 +1,43 @@
+import re
+from datetime import datetime
+
+def extract_dates(date_text):
+    """
+    Extracts the start and end date from a given date text string.
+    Handles cases with missing years and different formats.
+    """
+    current_year = datetime.now().year  # Get current year for inference
+
+    # ✅ Regex to handle different formats
+    date_match = re.search(r"(\w+ \d{1,2})(?:, (\d{4}))? ?- ?(\w+ \d{1,2}, \d{4})?", date_text)
+
+    if date_match:
+        start_date, start_year, end_date = date_match.groups()
+
+        # ✅ If start year is missing, use the year from the end date
+        if not start_year and end_date:
+            start_date += f", {end_date.split()[-1]}"
+        elif not start_year:
+            start_date += f", {current_year}"  # Default to current year
+
+        # ✅ If no end date, assume it's a single-day event
+        if not end_date:
+            end_date = start_date
+
+        return start_date, end_date
+
+    return date_text, "Not available"  # Fallback if regex fails
+
+# Example Usage
+date_texts = [
+    "Feb 10 - Feb 15, 2025",
+    "Jan 30 - Feb 10, 2025",
+    "March 3, 2025",
+    "April 15 - April 20",
+    "June 5, 2024 - June 10, 2024"
+]
+
+for dt in date_texts:
+    print(f"🔍 Input: {dt}")
+    start, end = extract_dates(dt)
+    print(f"✅ Start: {start}, End: {end}\n")

@@ -49,7 +49,11 @@ def filter_hackathons():
     if location:
         filters["location"] = location
     if min_prize:
+     try:
+        min_prize = int(min_prize.replace("₹", "").replace(",", "").strip())  # Remove currency symbols & commas
         filters["prize_money"] = {"$gte": min_prize}
+     except ValueError:
+        return jsonify({"error": "Invalid prize amount"}), 400
 
     results = list(collection.find(filters, {"_id": 0}))
     return jsonify(results)
