@@ -65,10 +65,18 @@ def filter_hackathons():
 
     if min_prize:
         try:
-            min_prize = int(min_prize.replace("₹", "").replace(",", "").strip())  # Normalize prize format
-            filters["prize_money"] = {"$gte": min_prize}
+            if min_prize.startswith(">="):
+                filters["prize_money"] = {"$gte": int(min_prize[2:].strip())}
+            elif min_prize.startswith("<="):
+                filters["prize_money"] = {"$lte": int(min_prize[2:].strip())}
+            elif min_prize.startswith(">"):
+                filters["prize_money"] = {"$gt": int(min_prize[1:].strip())}
+            elif min_prize.startswith("<"):
+                filters["prize_money"] = {"$lt": int(min_prize[1:].strip())}
+            else:
+                return jsonify({"error": "Invalid min_prize query format"}), 400
         except ValueError:
-            return jsonify({"error": "Invalid prize amount"}), 400
+            return jsonify({"error": "Invalid min_prize value"}), 400
 
     results = list(collection.find(filters, {"_id": 0}))
     return jsonify(results)
