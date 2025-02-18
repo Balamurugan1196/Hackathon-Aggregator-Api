@@ -84,35 +84,40 @@ def extract_dates(date_text):
 
     current_year = datetime.now().year  # To infer missing years
 
-    # Match different cases:
-    # 1. "Jan 31 - Mar 02, 2025"
-    # 2. "Feb 01 - 26, 2025"
-    # 3. "Dec 18, 2024 - Mar 02, 2025"
-    # 4. "Mar 02, 2025"
-    date_match = re.match(
-        r"(\w{3} \d{1,2})(?: - (\w{3} \d{1,2}))?,? (\d{4})?", date_text
-    )
-
+    # Case 1: Match "Jan 31 - Mar 02, 2025"
+    date_match = re.match(r"(\w{3} \d{1,2}) - (\w{3} \d{1,2}), (\d{4})", date_text)
     if date_match:
         start_day_month, end_day_month, year = date_match.groups()
-
-        # If no year is provided, assume the current year
-        if not year:
-            year = str(current_year)
-
-        # If there's no end date, assume it's a single-day event
-        if not end_day_month:
-            end_day_month = start_day_month
-
-        # Convert to datetime objects
         start_date = datetime.strptime(f"{start_day_month} {year}", "%b %d %Y")
         end_date = datetime.strptime(f"{end_day_month} {year}", "%b %d %Y")
-
-        # Return dates in ISO format (YYYY-MM-DD)
         return start_date.date().isoformat(), end_date.date().isoformat()
 
-    # If the date doesn't match the expected format, return "Not available"
+    # Case 2: Match "Feb 01 - 26, 2025" or "Feb 01 - 26"
+    date_match = re.match(r"(\w{3} \d{1,2}) - (\d{1,2}), (\d{4})", date_text)
+    if date_match:
+        start_day_month, end_day, year = date_match.groups()
+        start_date = datetime.strptime(f"{start_day_month} {year}", "%b %d %Y")
+        end_date = datetime.strptime(f"{start_day_month[:3]} {end_day} {year}", "%b %d %Y")
+        return start_date.date().isoformat(), end_date.date().isoformat()
+
+    # Case 3: Match "Dec 18, 2024 - Mar 02, 2025"
+    date_match = re.match(r"(\w{3} \d{1,2}, \d{4}) - (\w{3} \d{1,2}, \d{4})", date_text)
+    if date_match:
+        start_date_str, end_date_str = date_match.groups()
+        start_date = datetime.strptime(start_date_str, "%b %d, %Y")
+        end_date = datetime.strptime(end_date_str, "%b %d, %Y")
+        return start_date.date().isoformat(), end_date.date().isoformat()
+
+    # Case 4: Match a single date, "Mar 02, 2025"
+    date_match = re.match(r"(\w{3} \d{1,2}, \d{4})", date_text)
+    if date_match:
+        start_date_str = date_match.group(1)
+        start_date = datetime.strptime(start_date_str, "%b %d, %Y")
+        return start_date.date().isoformat(), start_date.date().isoformat()
+
+    # If none of the formats match, return "Not available"
     return "Not available", "Not available"
+
 
 
 # Refined Function to Extract Prize Money
