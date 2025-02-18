@@ -70,30 +70,43 @@ while True:
 # Refined Function to Extract Dates
 def extract_dates(date_text):
     """
-    Extracts the start and end date from a given date text string.
-    Handles cases with missing years, different formats, and ranges.
+    Extracts start and end dates from multiple formats:
+    - "Jan 31 - Mar 02, 2025"
+    - "Feb 01 - 26, 2025"
+    - "Dec 18, 2024 - Mar 02, 2025"
+    - "Mar 02, 2025"
+    Returns dates in DD-MM-YYYY format.
     """
-    current_year = datetime.now().year  # Get current year for inference
 
-    # Regex to handle multiple formats, including "15 Jan 2025 - 20 Feb 2025"
-    date_match = re.search(r"(\d{1,2} \w+)(?:, (\d{4}))? ?- ?(\d{1,2} \w+, \d{4})?", date_text)
+    current_year = datetime.now().year  # To infer missing years
+
+    # Match different cases:
+    # 1. "Jan 31 - Mar 02, 2025"
+    # 2. "Feb 01 - 26, 2025"
+    # 3. "Dec 18, 2024 - Mar 02, 2025"
+    # 4. "Mar 02, 2025"
+    date_match = re.match(
+        r"(\w{3} \d{1,2})(?: - (\w{3} \d{1,2}))?,? (\d{4})?", date_text
+    )
 
     if date_match:
-        start_date, start_year, end_date = date_match.groups()
+        start_day_month, end_day_month, year = date_match.groups()
 
-        # If start year is missing, infer from the end date or use current year
-        if not start_year and end_date:
-            start_date += f", {end_date.split()[-1]}"
-        elif not start_year:
-            start_date += f", {current_year}"
+        # If no year is provided, assume the current year
+        if not year:
+            year = str(current_year)
 
-        # If no end date, assume it's a single-day event
-        if not end_date:
-            end_date = start_date
+        # If there's no end date, assume it's a single-day event
+        if not end_day_month:
+            end_day_month = start_day_month
+
+        # Convert to DD-MM-YYYY format
+        start_date = datetime.strptime(f"{start_day_month} {year}", "%b %d %Y").strftime("%d-%m-%Y")
+        end_date = datetime.strptime(f"{end_day_month} {year}", "%b %d %Y").strftime("%d-%m-%Y")
 
         return start_date, end_date
 
-    return date_text, "Not available"  # Fallback if regex fails
+    return "Invalid format", "Invalid format"
 
 # Refined Function to Extract Prize Money
 def extract_prize_money(event):
