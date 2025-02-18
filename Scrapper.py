@@ -68,9 +68,6 @@ while True:
     print(f"🔄 Scroll Attempt {scroll_attempts}: Found {current_count} hackathons.")
 
 # Refined Function to Extract Dates
-import re
-from datetime import datetime
-
 def extract_dates(date_text):
     """
     Extracts start and end dates from multiple formats:
@@ -80,6 +77,10 @@ def extract_dates(date_text):
     - "Mar 02, 2025"
     Returns dates in ISO format (YYYY-MM-DD).
     """
+
+    # If the date is "Not available", return the same
+    if "Not available" in date_text:
+        return "Not available", "Not available"
 
     current_year = datetime.now().year  # To infer missing years
 
@@ -110,7 +111,8 @@ def extract_dates(date_text):
         # Return dates in ISO format (YYYY-MM-DD)
         return start_date.date().isoformat(), end_date.date().isoformat()
 
-    return "Invalid format", "Invalid format"
+    # If the date doesn't match the expected format, return "Not available"
+    return "Not available", "Not available"
 
 
 # Refined Function to Extract Prize Money
