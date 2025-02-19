@@ -52,7 +52,7 @@ def filter_hackathons():
     end_date = request.args.get('end_date')
     mode = request.args.get('mode')
     location = request.args.get('location')
-    min_prize = request.args.get('min_prize')
+    prize_money = request.args.get('prize_money')
 
     if start_date:
         filters["start_date"] = {"$gte": start_date}
@@ -63,20 +63,24 @@ def filter_hackathons():
     if location:
         filters["location"] = location
 
-    if min_prize:
+    if prize_money:
         try:
-            if min_prize.startswith(">="):
-                filters["prize_money"] = {"$gte": int(min_prize[2:].strip())}
-            elif min_prize.startswith("<="):
-                filters["prize_money"] = {"$lte": int(min_prize[2:].strip())}
-            elif min_prize.startswith(">"):
-                filters["prize_money"] = {"$gt": int(min_prize[1:].strip())}
-            elif min_prize.startswith("<"):
-                filters["prize_money"] = {"$lt": int(min_prize[1:].strip())}
+            operator = prize_money[:2] if prize_money[:2] in [">=", "<="] else prize_money[:1]
+            value = int(prize_money[len(operator):].strip())
+
+            if operator == ">=":
+                filters["prize_money"] = {"$gte": value}
+            elif operator == "<=":
+                filters["prize_money"] = {"$lte": value}
+            elif operator == ">":
+                filters["prize_money"] = {"$gt": value}
+            elif operator == "<":
+                filters["prize_money"] = {"$lt": value}
             else:
-                return jsonify({"error": "Invalid min_prize query format"}), 400
+                return jsonify({"error": "Invalid prize_money format"}), 400
         except ValueError:
-            return jsonify({"error": "Invalid min_prize value"}), 400
+            return jsonify({"error": "Invalid prize_money value"}), 400
+
 
     results = list(collection.find(filters, {"_id": 0}))
     return jsonify(results)
