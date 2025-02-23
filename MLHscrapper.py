@@ -6,6 +6,7 @@ from datetime import datetime
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
@@ -55,13 +56,13 @@ def parse_mlh_date(date_text):
         print(f"❌ Error parsing date: {date_text}, {e}")
         return None, None
 
-# Initialize Selenium WebDriver (Remove Headless Mode for Local Testing)
-options = webdriver.ChromeOptions()
-options.add_argument("--no-sandbox")
-options.add_argument("--disable-dev-shm-usage")
-options.add_argument("--headless")
+# Chrome WebDriver Setup
+chrome_options = Options()
+chrome_options.add_argument("--headless")  # Run in background
+chrome_options.add_argument("--no-sandbox")
+chrome_options.add_argument("--disable-dev-shm-usage")
 
-driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
 
 # Connect to MongoDB (Local Connection)
 username = urllib.parse.quote_plus(os.getenv("MONGO_USER", ""))
