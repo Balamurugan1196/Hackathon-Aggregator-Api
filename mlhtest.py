@@ -55,21 +55,16 @@ def parse_mlh_date(date_text):
         print(f"❌ Error parsing date: {date_text}, {e}")
         return None, None
 
-# Initialize Selenium WebDriver (Headless Mode for GitHub Actions)
+# Initialize Selenium WebDriver (Remove Headless Mode for Local Testing)
 options = webdriver.ChromeOptions()
-options.add_argument("--headless")  # Run in headless mode (important for GitHub Actions)
-options.add_argument("--no-sandbox")  # Bypass OS security restrictions
-options.add_argument("--disable-dev-shm-usage")  # Avoid crashes due to limited memory
-options.add_argument("--ignore-certificate-errors")  
-options.add_argument("--disable-web-security")  
+options.add_argument("--no-sandbox")
+options.add_argument("--disable-dev-shm-usage")
 
 driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
 
-# Connect to MongoDB
-username = urllib.parse.quote_plus(os.getenv("MONGO_USER", ""))
-password = urllib.parse.quote_plus(os.getenv("MONGO_PASS", ""))
-client = MongoClient(f"mongodb+srv://{username}:{password}@hackathondb.hwg5w.mongodb.net/?retryWrites=true&w=majority&appName=hackathondb")
-db = client["hackathonDB"]
+# Connect to MongoDB (Local Connection)
+client = MongoClient("mongodb://localhost:27017/")  # Local MongoDB
+db = client["hackathon_db"]
 collection = db["events"]
 
 # Open the MLH hackathon page
