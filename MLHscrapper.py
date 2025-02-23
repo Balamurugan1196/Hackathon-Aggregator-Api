@@ -64,13 +64,12 @@ options.add_argument("--headless")
 driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
 
 # Connect to MongoDB (Local Connection)
-client = MongoClient("mongodb://localhost:27017/")  # Local MongoDB
-db = client["hackathon_db"]
+username = urllib.parse.quote_plus(os.getenv("MONGO_USER", ""))
+password = urllib.parse.quote_plus(os.getenv("MONGO_PASS", ""))
+client = MongoClient(f"mongodb+srv://{username}:{password}@hackathondb.hwg5w.mongodb.net/?retryWrites=true&w=majority&appName=hackathondb")
+db = client["hackathonDB"]
 collection = db["events"]
-
-# Delete existing hackathon data before inserting new ones
-collection.delete_many({})  
-print("🗑️ Deleted existing hackathon data from the database.")
+collection.delete_many({})  # Clear old data
 
 # Open the MLH hackathon page
 url = "https://mlh.io/seasons/2025/events"
