@@ -78,7 +78,7 @@ driver.get(url)
 
 try:
     # Wait until at least one "container feature" is found (Increased to 15s for reliability)
-    WebDriverWait(driver, 30).until(
+    WebDriverWait(driver, 60).until(
         EC.presence_of_element_located((By.CLASS_NAME, "container.feature"))
     )
 
