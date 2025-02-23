@@ -3,3 +3,4 @@ requests
 pymongo
 selenium
 gunicorn
+webdriver-manager
