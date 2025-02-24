@@ -1,6 +1,6 @@
+import os
 import re
 import time
-import os
 import urllib.parse
 from datetime import datetime
 from selenium import webdriver
@@ -9,152 +9,97 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from webdriver_manager.chrome import ChromeDriverManager
 from pymongo import MongoClient
 
-# Function to convert date format to ISO format
+# Load MongoDB credentials from environment variables
+username = urllib.parse.quote_plus(os.getenv("MONGO_USER", ""))
+password = urllib.parse.quote_plus(os.getenv("MONGO_PASS", ""))
+
+# Connect to MongoDB Atlas
+client = MongoClient(
+    f"mongodb+srv://{username}:{password}@hackathondb.hwg5w.mongodb.net/?retryWrites=true&w=majority&appName=hackathondb"
+)
+db = client["hackathonDB"]
+collection = db["events"]
+
+# Function to parse MLH event dates
 def parse_mlh_date(date_text):
-    try:
-        current_year = datetime.today().year  # Get the current year
+    current_year = datetime.today().year
+    date_text = re.sub(r"(ST|ND|RD|TH)", "", date_text, flags=re.IGNORECASE)
+    date_pattern = r"([A-Za-z]+) (\d{1,2})\s*-\s*((?:[A-Za-z]+ )?\d{1,2})"
 
-        # Remove ordinal suffixes (st, nd, rd, th)
-        date_text = re.sub(r"(ST|ND|RD|TH)", "", date_text, flags=re.IGNORECASE)
+    match = re.match(date_pattern, date_text.strip())
+    if match:
+        start_month_name, start_day, end_part = match.groups()
+        start_month_number = datetime.strptime(start_month_name[:3], "%b").month
+        start_date = datetime(current_year, start_month_number, int(start_day)).strftime("%Y-%m-%d")
 
-        # Regex pattern to match formats like:
-        # "FEB 21 - 23", "APR 1 - MAR 4", "JAN 10 - FEB 2"
-        date_pattern = r"([A-Za-z]+) (\d{1,2})\s*-\s*((?:[A-Za-z]+ )?\d{1,2})"
-
-        match = re.match(date_pattern, date_text.strip())
-        if match:
-            start_month_name, start_day, end_part = match.groups()
-
-            # Convert month name to month number
-            start_month_number = datetime.strptime(start_month_name[:3], "%b").month
-
-            # Parse the start date
-            start_date = datetime(current_year, start_month_number, int(start_day)).strftime("%Y-%m-%d")
-
-            # Process the end date
-            end_match = re.match(r"([A-Za-z]+ )?(\d{1,2})", end_part.strip())
-            if end_match:
-                end_month_name, end_day = end_match.groups()
-                if end_month_name:  # If end date has a month (e.g., "FEB 2")
-                    end_month_number = datetime.strptime(end_month_name[:3], "%b").month
-                else:  # If only a day is given (e.g., "23"), assume same month
-                    end_month_number = start_month_number
-
-                # Parse the end date
-                end_date = datetime(current_year, end_month_number, int(end_day)).strftime("%Y-%m-%d")
-            else:
-                end_date = start_date  # If no end date, it's a one-day event
-
-            return start_date, end_date
+        end_match = re.match(r"([A-Za-z]+ )?(\d{1,2})", end_part.strip())
+        if end_match:
+            end_month_name, end_day = end_match.groups()
+            end_month_number = datetime.strptime(end_month_name[:3], "%b").month if end_month_name else start_month_number
+            end_date = datetime(current_year, end_month_number, int(end_day)).strftime("%Y-%m-%d")
         else:
-            raise ValueError("Date format not recognized.")
+            end_date = start_date
+        return start_date, end_date
+    return None, None
 
-    except Exception as e:
-        print(f"❌ Error parsing date: {date_text}, {e}")
-        return None, None
-
-# Chrome WebDriver Setup
+# Setup Chrome WebDriver for headless execution
 chrome_options = Options()
-chrome_options.add_argument("--headless")  # Run in background
+chrome_options.add_argument("--headless")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 
-driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+service = Service("/usr/bin/chromedriver")  # Adjust path if needed
+driver = webdriver.Chrome(service=service, options=chrome_options)
 
-# Connect to MongoDB (Local Connection)
-username = urllib.parse.quote_plus(os.getenv("MONGO_USER", ""))
-password = urllib.parse.quote_plus(os.getenv("MONGO_PASS", ""))
-client = MongoClient(f"mongodb+srv://{username}:{password}@hackathondb.hwg5w.mongodb.net/?retryWrites=true&w=majority&appName=hackathondb")
-db = client["hackathonDB"]
-collection = db["events"]
-collection.delete_many({})  # Clear old data
-
-# Open the MLH hackathon page
+# MLH Hackathon Page
 url = "https://mlh.io/seasons/2025/events"
 driver.get(url)
 
-try:
-    # Wait until at least one "container feature" is found (Increased to 15s for reliability)
-    WebDriverWait(driver, 60).until(
-        EC.presence_of_element_located((By.CLASS_NAME, "container.feature"))
-    )
+hackathons_list = []
+WebDriverWait(driver, 15).until(
+    EC.presence_of_all_elements_located((By.CLASS_NAME, "container"))
+)
 
-    # Get all "container feature" elements
-    containers = driver.find_elements(By.CLASS_NAME, "container.feature")
+feature_containers = driver.find_elements(By.CLASS_NAME, "container")
+for container in feature_containers:
+    row = container.find_element(By.CLASS_NAME, "row")
+    event_wrappers = row.find_elements(By.CLASS_NAME, "event-wrapper")
 
-    first_valid_row = None
-
-    # Loop through each container to find the one with a "row" containing events
-    for container in containers:
-        rows = container.find_elements(By.CLASS_NAME, "row")
-        for row in rows:
-            if row.find_elements(By.CLASS_NAME, "event-wrapper"):  # Check if row has events
-                first_valid_row = row
-                break
-        if first_valid_row:
-            break  # Stop once we find the correct row
-
-    if not first_valid_row:
-        print("⚠️ No upcoming hackathons found.")
-    else:
-        events = first_valid_row.find_elements(By.CLASS_NAME, "event-wrapper")
-        hackathons = []
-
-        for event in events:
-            hackathon = {}
+    if event_wrappers:
+        for event in event_wrappers:
+            name = event.find_element(By.CLASS_NAME, "event-name").text.strip()
+            date_text = event.find_element(By.CLASS_NAME, "event-date").text.strip()
+            location = event.find_element(By.CLASS_NAME, "event-location").text.strip()
+            website = event.find_element(By.TAG_NAME, "a").get_attribute("href")
 
             try:
-                hackathon["name"] = event.find_element(By.CSS_SELECTOR, "h3.event-name").text.strip()
+                mode = event.find_element(By.CLASS_NAME, "event-hybrid-notes").text.strip()
             except:
-                hackathon["name"] = "N/A"
+                mode = "Unknown"
 
-            try:
-                mode_text = event.find_element(By.CLASS_NAME, "event-hybrid-notes").find_element(By.TAG_NAME, "span").text.strip()
-                if "In-Person Only" in mode_text:
-                    hackathon["mode"] = "Offline"
-                elif "Digital Only" in mode_text:
-                    hackathon["mode"] = "Online"
-                else:
-                    hackathon["mode"] = "Hybrid"  # Handles mixed or unspecified modes
-            except:
-                hackathon["mode"] = "N/A"
+            if mode == "Digital Only":
+                mode, location = "Online", "Everywhere"
+            else:
+                mode = "Offline"
 
-            try:
-                hackathon["location"] = event.find_element(By.CLASS_NAME, "event-location").text.strip()
-                if hackathon["mode"] == "Online":
-                    hackathon["location"] = "Everywhere"
-            except:
-                hackathon["location"] = "N/A"
+            start_date, end_date = parse_mlh_date(date_text)
 
-            try:
-                date_text = event.find_element(By.CLASS_NAME, "event-date").text.strip()
-                hackathon["start_date"], hackathon["end_date"] = parse_mlh_date(date_text)  # Convert to ISO format
-            except:
-                hackathon["start_date"], hackathon["end_date"] = "N/A", "N/A"
+            event_data = {
+                "name": name,
+                "start_date": start_date,
+                "end_date": end_date,
+                "location": location,
+                "apply_link": website,
+                "mode": mode,
+                "source": "MLH"
+            }
+            hackathons_list.append(event_data)
+        break  # Stop searching after finding valid events
 
-            try:
-                hackathon["apply_link"] = event.find_element(By.TAG_NAME, "a").get_attribute("href")
-            except:
-                hackathon["apply_link"] = "N/A"
+# Insert into MongoDB
+if hackathons_list:
+    collection.insert_many(hackathons_list)
 
-            hackathon["source"] = "MLH"  # Source tag
-
-            hackathons.append(hackathon)
-
-            # Sleep between each event scraping to avoid hitting server too often
-            time.sleep(1)
-
-    if hackathons:
-        try:
-            collection.insert_many(hackathons)  # Insert all hackathons into MongoDB at once
-            print(f"✅ Successfully stored {len(hackathons)} hackathons in MongoDB!")
-        except Exception as e:
-            print(f"❌ MongoDB Insert Error: {e}")
-
-finally:
-    client.close()  # Close the MongoDB connection
-    driver.quit()
-    print("🔄 Driver closed.")
+driver.quit()

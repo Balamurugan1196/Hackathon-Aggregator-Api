@@ -1,7 +1,5 @@
 import re
 import time
-import os
-import urllib.parse
 from datetime import datetime
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -11,7 +9,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 from pymongo import MongoClient
 
-# Function to convert date format to ISO format
+# Function to convert date format
 def parse_mlh_date(date_text):
     try:
         current_year = datetime.today().year  # Get the current year
@@ -19,8 +17,7 @@ def parse_mlh_date(date_text):
         # Remove ordinal suffixes (st, nd, rd, th)
         date_text = re.sub(r"(ST|ND|RD|TH)", "", date_text, flags=re.IGNORECASE)
 
-        # Regex pattern to match formats like:
-        # "FEB 21 - 23", "APR 1 - MAR 4", "JAN 10 - FEB 2"
+        # Regex pattern to match formats like: "FEB 21 - 23", "APR 1 - MAR 4", "JAN 10 - FEB 2"
         date_pattern = r"([A-Za-z]+) (\d{1,2})\s*-\s*((?:[A-Za-z]+ )?\d{1,2})"
 
         match = re.match(date_pattern, date_text.strip())
@@ -55,104 +52,84 @@ def parse_mlh_date(date_text):
         print(f"❌ Error parsing date: {date_text}, {e}")
         return None, None
 
-# Initialize Selenium WebDriver (Remove Headless Mode for Local Testing)
+# Initialize WebDriver
 options = webdriver.ChromeOptions()
-options.add_argument("--no-sandbox")
-options.add_argument("--disable-dev-shm-usage")
-
+options.add_argument("--ignore-certificate-errors")
+options.add_argument("--disable-blink-features=AutomationControlled")
+options.add_argument("--disable-gpu")  # Helps with headless mode sometimes
 driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
 
-# Connect to MongoDB (Local Connection)
-client = MongoClient("mongodb://localhost:27017/")  # Local MongoDB
+# Connect to MongoDB
+client = MongoClient("mongodb://localhost:27017/")
 db = client["hackathon_db"]
 collection = db["events"]
 
-# Open the MLH hackathon page
+# Open MLH hackathon page
 url = "https://mlh.io/seasons/2025/events"
 driver.get(url)
-
+hackathons_list=[]
 try:
-    # Wait until at least one "container feature" is found (Increased to 15s for reliability)
-    WebDriverWait(driver, 30).until(
-        EC.presence_of_element_located((By.CLASS_NAME, "container.feature"))
+    # Wait for the main feature container to load
+    WebDriverWait(driver, 15).until(
+        EC.presence_of_all_elements_located((By.CLASS_NAME, "container"))
     )
 
-    # Get all "container feature" elements
-    containers = driver.find_elements(By.CLASS_NAME, "container.feature")
+    # Find all container elements
+    feature_containers = driver.find_elements(By.CLASS_NAME, "container")
 
-    first_valid_row = None
-
-    # Loop through each container to find the one with a "row" containing events
-    for container in containers:
-        rows = container.find_elements(By.CLASS_NAME, "row")
-        for row in rows:
-            if row.find_elements(By.CLASS_NAME, "event-wrapper"):  # Check if row has events
-                first_valid_row = row
-                break
-        if first_valid_row:
-            break  # Stop once we find the correct row
-
-    if not first_valid_row:
-        print("⚠️ No upcoming hackathons found.")
-    else:
-        events = first_valid_row.find_elements(By.CLASS_NAME, "event-wrapper")
-        hackathons = []
-
-        for event in events:
-            hackathon = {}
-
-            try:
-                hackathon["name"] = event.find_element(By.CSS_SELECTOR, "h3.event-name").text.strip()
-            except:
-                hackathon["name"] = "N/A"
-
-            try:
-                mode_text = event.find_element(By.CLASS_NAME, "event-hybrid-notes").find_element(By.TAG_NAME, "span").text.strip()
-                if "In-Person Only" in mode_text:
-                    hackathon["mode"] = "Offline"
-                elif "Digital Only" in mode_text:
-                    hackathon["mode"] = "Online"
-                else:
-                    hackathon["mode"] = "Hybrid"  # Handles mixed or unspecified modes
-            except:
-                hackathon["mode"] = "N/A"
-
-            try:
-                hackathon["location"] = event.find_element(By.CLASS_NAME, "event-location").text.strip()
-                if hackathon["mode"] == "Online":
-                    hackathon["location"] = "Everywhere"
-            except:
-                hackathon["location"] = "N/A"
-
-            try:
-                date_text = event.find_element(By.CLASS_NAME, "event-date").text.strip()
-                hackathon["start_date"], hackathon["end_date"] = parse_mlh_date(date_text)  # Convert to ISO format
-            except:
-                hackathon["start_date"], hackathon["end_date"] = "N/A", "N/A"
-
-            try:
-                hackathon["apply_link"] = event.find_element(By.TAG_NAME, "a").get_attribute("href")
-            except:
-                hackathon["apply_link"] = "N/A"
-
-            hackathon["source"] = "MLH"  # Source tag
-
-            hackathons.append(hackathon)
-
-            # Sleep between each event scraping to avoid hitting server too often
-            time.sleep(1)
-
-    if hackathons:
+    for container in feature_containers:
         try:
-            inserted_count = 0
-            for hackathon in hackathons:
-                if not collection.find_one({"name": hackathon["name"]}):  # Check if already exists
-                    collection.insert_one(hackathon)
-                    inserted_count += 1
-            print(f"✅ Successfully stored {inserted_count} new hackathons in MongoDB!")
+            row = container.find_element(By.CLASS_NAME, "row")
+            event_wrappers = row.find_elements(By.CLASS_NAME, "event-wrapper")
+
+            if event_wrappers:
+                print(f"✅ Found {len(event_wrappers)} upcoming events.")
+                
+                # Extract data from each event
+                for event in event_wrappers:
+                    try:
+                        name = event.find_element(By.CLASS_NAME, "event-name").text.strip()
+                        date_text = event.find_element(By.CLASS_NAME, "event-date").text.strip()
+                        location = event.find_element(By.CLASS_NAME, "event-location").text.strip()
+                        website = event.find_element(By.TAG_NAME, "a").get_attribute("href")
+
+                        # Some events might not have mode information
+                        try:
+                            mode = event.find_element(By.CLASS_NAME, "event-hybrid-notes").text.strip()
+                        except:
+                            mode = "Unknown"
+
+                        # Adjust mode and location based on digital/physical
+                        if mode == "Digital Only":
+                            mode = "Online"
+                            location = "Everywhere"
+                        else:
+                            mode = "Offline"
+                        start_date, end_date = parse_mlh_date(date_text)
+
+                        event_data = {
+                            "name": name,
+                            "start_date": start_date,
+                            "end_date": end_date,
+                            "location": location,
+                            "apply_link": website,
+                            "mode": mode,
+                            "source": "MLH"
+                        }
+                        
+                        print(event_data)
+                        hackathons_list.append(event_data)
+                    except Exception as e:
+                        print(f"❌ Error extracting event data: {e}")
+
+                break  # Stop searching after finding the first valid container with events
+
         except Exception as e:
-            print(f"❌ MongoDB Insert Error: {e}")
+            print("⚠️ Skipping container due to missing elements:", e)
+    if hackathons_list:
+        collection.insert_many(hackathons_list)
+        print(f"✅ Successfully inserted {len(hackathons_list)} events into MongoDB.")
+
 
 finally:
-    client.close()  # Close the MongoDB connection
     driver.quit()
