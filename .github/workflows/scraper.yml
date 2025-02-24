@@ -21,14 +21,23 @@ jobs:
         run: |
           pip install -r requirements.txt
 
-      - name: Debug GitHub Secrets
+      - name: Install Chrome and Chromedriver
         run: |
-          echo "MONGO_USER=${{ secrets.MONGO_USER }}"
-          echo "MONGO_PASS=${{ secrets.MONGO_PASS }}"
+          sudo apt-get update
+          sudo apt-get install -y chromium-chromedriver
+          echo "CHROMEDRIVER_PATH=$(which chromedriver)" >> $GITHUB_ENV
+
+      - name: Test MongoDB Connection
+        env:
+          MONGO_USER: ${{ secrets.MONGO_USER }}
+          MONGO_PASS: ${{ secrets.MONGO_PASS }}
+        run: |
+          python test_connection.py
 
       - name: Run the scraper
         env:
           MONGO_USER: ${{ secrets.MONGO_USER }}
           MONGO_PASS: ${{ secrets.MONGO_PASS }}
+          CHROMEDRIVER_PATH: ${{ env.CHROMEDRIVER_PATH }}
         run: |
           python MLHscrapper.py
