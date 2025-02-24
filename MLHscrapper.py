@@ -59,7 +59,9 @@ driver.get(url)
 
 hackathons_list = []
 time.sleep(15)
-
+WebDriverWait(driver, 15).until(
+    EC.presence_of_all_elements_located((By.XPATH, "//*[contains(@class, 'container') and contains(@class, 'feature')]"))
+)
 
 
 feature_containers = driver.find_elements(By.CLASS_NAME, "container")
@@ -101,6 +103,5 @@ for container in feature_containers:
 # Insert into MongoDB
 if hackathons_list:
     collection.insert_many(hackathons_list)
-    print('itssssssssssssssssssssssss working , scraping done')
 
 driver.quit()
