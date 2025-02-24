@@ -68,8 +68,8 @@ hackathons_list = []
 
 # Wait for the main feature container to load
 WebDriverWait(driver, 30).until(
-    EC.presence_of_all_elements_located((By.XPATH, "//div[contains(@class, 'container') and contains(@class, 'feature')]"))
-)
+        EC.presence_of_all_elements_located((By.XPATH, "/html/body/div[1]/div[3]"))
+    )
 
 
 # Find all container elements
