@@ -68,11 +68,11 @@ hackathons_list = []
 try:
     # Wait for the main feature container to load
     WebDriverWait(driver, 30).until(
-        EC.presence_of_all_elements_located((By.CLASS_NAME, "container"))
+        EC.presence_of_all_elements_located((By.CLASS_NAME, "container feature"))
     )
 
     # Find all container elements
-    feature_containers = driver.find_elements(By.CLASS_NAME, "container")
+    feature_containers = driver.find_elements(By.CLASS_NAME, "container feature")
     if feature_containers:
         logging.info(f"✅ Found {len(feature_containers)} containers.")
     else:
@@ -89,10 +89,10 @@ try:
                 # Extract data from each event
                 for event in event_wrappers:
                     try:
-                        name = event.find_element(By.CLASS_NAME, "event-name").text.strip() if event.find_element(By.CLASS_NAME, "event-name") else "Unknown"
-                        date_text = event.find_element(By.CLASS_NAME, "event-date").text.strip() if event.find_element(By.CLASS_NAME, "event-date") else "Unknown"
-                        location = event.find_element(By.CLASS_NAME, "event-location").text.strip() if event.find_element(By.CLASS_NAME, "event-location") else "Unknown"
-                        website = event.find_element(By.TAG_NAME, "a").get_attribute("href") if event.find_element(By.TAG_NAME, "a") else "Unknown"
+                        name = event.find_element(By.CLASS_NAME, "event-name").text.strip()
+                        date_text = event.find_element(By.CLASS_NAME, "event-date").text.strip()
+                        location = event.find_element(By.CLASS_NAME, "event-location").text.strip()
+                        website = event.find_element(By.TAG_NAME, "a").get_attribute("href")
 
                         # Handle missing mode information
                         try:
