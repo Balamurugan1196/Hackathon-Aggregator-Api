@@ -60,10 +60,10 @@ driver.get(url)
 hackathons_list = []
 time.sleep(5)
 WebDriverWait(driver, 15).until(
-    EC.presence_of_all_elements_located((By.CLASS_NAME, "container feature"))
+    EC.presence_of_all_elements_located((By.CLASS_NAME, "container"))
 )
 
-feature_containers = driver.find_elements(By.CLASS_NAME, "container feature")
+feature_containers = driver.find_elements(By.CLASS_NAME, "container")
 for container in feature_containers:
     row = container.find_element(By.CLASS_NAME, "row")
     event_wrappers = row.find_elements(By.CLASS_NAME, "event-wrapper")
