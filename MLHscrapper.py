@@ -44,13 +44,12 @@ def parse_mlh_date(date_text):
         return start_date, end_date
     return None, None
 
-# Setup Chrome WebDriver for headless execution
+# Chrome WebDriver Setup
 chrome_options = Options()
-chrome_options.add_argument("--headless")
+chrome_options.add_argument("--headless")  # Run in background
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
-
-service = Service("/usr/bin/chromedriver")  # Adjust path if needed
+service = Service("/usr/bin/chromedriver")
 driver = webdriver.Chrome(service=service, options=chrome_options)
 
 # MLH Hackathon Page
