@@ -59,7 +59,7 @@ driver.get(url)
 
 hackathons_list = []
 time.sleep(5)
-WebDriverWait(driver, 15).until(
+WebDriverWait(driver, 30).until(
     EC.presence_of_all_elements_located((By.CLASS_NAME, "container"))
 )
 
