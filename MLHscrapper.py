@@ -10,6 +10,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from pymongo import MongoClient
+from webdriver_manager.chrome import ChromeDriverManager
 
 # Load MongoDB credentials from environment variables
 username = urllib.parse.quote_plus(os.getenv("MONGO_USER", ""))
@@ -49,7 +50,7 @@ chrome_options = Options()
 chrome_options.add_argument("--headless")  # Run in background
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
-service = Service("/usr/bin/chromedriver")
+service = Service(ChromeDriverManager().install())
 driver = webdriver.Chrome(service=service, options=chrome_options)
 
 # MLH Hackathon Page
