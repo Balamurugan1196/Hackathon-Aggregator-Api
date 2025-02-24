@@ -20,7 +20,7 @@ password = urllib.parse.quote_plus(os.getenv("MONGO_PASS", ""))
 client = MongoClient(
     f"mongodb+srv://{username}:{password}@hackathondb.hwg5w.mongodb.net/?retryWrites=true&w=majority&appName=hackathondb"
 )
-db = client["hackathonDB"]
+db = client["hackathondb"]
 collection = db["events"]
 
 # Function to parse MLH event dates
