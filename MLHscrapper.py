@@ -58,10 +58,8 @@ url = "https://mlh.io/seasons/2025/events"
 driver.get(url)
 
 hackathons_list = []
-time.sleep(5)
-WebDriverWait(driver, 15).until(
-    EC.presence_of_all_elements_located((By.XPATH, "//*[contains(@class, 'container') and contains(@class, 'feature')]"))
-)
+time.sleep(15)
+
 
 
 feature_containers = driver.find_elements(By.CLASS_NAME, "container")
