@@ -101,5 +101,6 @@ for container in feature_containers:
 # Insert into MongoDB
 if hackathons_list:
     collection.insert_many(hackathons_list)
+    print('itssssssssssssssssssssssss working , scraping done')
 
 driver.quit()
