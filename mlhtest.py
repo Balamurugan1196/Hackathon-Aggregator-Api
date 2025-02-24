@@ -70,10 +70,9 @@ driver.get(url)
 hackathons_list=[]
 try:
     # Wait for the main feature container to load
-    WebDriverWait(driver, 30).until(
-    EC.presence_of_all_elements_located((By.XPATH, "//*[contains(@class, 'container') and contains(@class, 'feature')]"))
-)
-
+    WebDriverWait(driver, 15).until(
+        EC.presence_of_all_elements_located((By.CLASS_NAME, "container"))
+    )
 
     # Find all container elements
     feature_containers = driver.find_elements(By.CLASS_NAME, "container")
