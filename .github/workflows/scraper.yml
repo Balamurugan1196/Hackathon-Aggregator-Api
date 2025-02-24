@@ -1,34 +1,48 @@
-name: Run Scraper Daily
+name: Run MLH Scraper
 
 on:
+  push:
+    branches:
+      - main
   schedule:
-    - cron: "0 0 * * *"  # Runs every day at midnight UTC
-  workflow_dispatch:
+    - cron: "0 0 * * *"  # Runs daily at midnight UTC (adjust as needed)
+  workflow_dispatch:  # Allows manual trigger
 
 jobs:
-  scrape:
+  scrape_mlh:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: "3.10"
 
-      - name: Install dependencies
+      - name: Install Dependencies
         run: |
-          pip install -r requirements.txt
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt  # Ensure you have a requirements.txt file
 
-      - name: Debug GitHub Secrets
+      - name: Install Chrome and ChromeDriver
         run: |
-          echo "MONGO_USER=${{ secrets.MONGO_USER }}"
-          echo "MONGO_PASS=${{ secrets.MONGO_PASS }}"
+          sudo apt update
+          sudo apt install -y google-chrome-stable chromium-chromedriver
+          CHROME_VERSION=$(google-chrome --version | awk '{print $3}')
+          echo "Chrome Version: $CHROME_VERSION"
+          chromedriver --version
 
-      - name: Run the scraper
+      - name: Run MLH Scraper
         env:
-          MONGO_USER: ${{ secrets.MONGO_USER }}
-          MONGO_PASS: ${{ secrets.MONGO_PASS }}
+          MONGO_URI: "mongodb://localhost:27017/"
         run: |
           python MLHscrapper.py
+
+      - name: Upload Logs on Failure
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: mlh-scraper-logs
+          path: logs/
