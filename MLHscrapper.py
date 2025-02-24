@@ -56,12 +56,9 @@ chrome_options.add_argument("--headless")  # Run in background
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 
-try:
-    service = Service(ChromeDriverManager().install())
-except Exception as e:
-    logging.error("Failed to install ChromeDriver: %s", e)
-    service = Service("/path/to/fallback/chromedriver")  # Provide a fallback path
 
+# Automatically download and use the correct ChromeDriver version
+service = Service(ChromeDriverManager().install())
 driver = webdriver.Chrome(service=service, options=chrome_options)
 
 # MLH Hackathon Page
