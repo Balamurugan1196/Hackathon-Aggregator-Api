@@ -95,10 +95,9 @@ try:
 
     hackathons_list = []
 
-    # Wait for the main feature container to load
-    WebDriverWait(driver, 30).until(  # Increased timeout
-        EC.presence_of_all_elements_located((By.CLASS_NAME, "container feature"))
-    )
+    WebDriverWait(driver, 30).until(
+    lambda d: len(d.find_elements(By.CLASS_NAME, "container feature")) >= 2)
+
 
     # Find all container elements
     feature_containers = driver.find_elements(By.CLASS_NAME, "container feature")
