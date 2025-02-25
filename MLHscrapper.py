@@ -76,11 +76,7 @@ chrome_options = Options()
 chrome_options.add_argument("--headless")  # Run in background
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
-chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--window-size=1920,1080")  # Set window size
-
-# Automatically download and use the correct ChromeDriver version
-service = Service(ChromeDriverManager().install())
+service = Service()  
 driver = webdriver.Chrome(service=service, options=chrome_options)
 
 try:

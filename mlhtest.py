@@ -7,7 +7,6 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
-from pymongo import MongoClient
 
 # Function to convert date format
 def parse_mlh_date(date_text):
@@ -59,15 +58,11 @@ options.add_argument("--disable-blink-features=AutomationControlled")
 options.add_argument("--disable-gpu")  # Helps with headless mode sometimes
 driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
 
-# Connect to MongoDB
-client = MongoClient("mongodb://localhost:27017/")
-db = client["hackathon_db"]
-collection = db["events"]
-
 # Open MLH hackathon page
 url = "https://mlh.io/seasons/2025/events"
 driver.get(url)
-hackathons_list=[]
+hackathons_list = []
+
 try:
     # Wait for the main feature container to load
     WebDriverWait(driver, 15).until(
@@ -84,7 +79,7 @@ try:
 
             if event_wrappers:
                 print(f"✅ Found {len(event_wrappers)} upcoming events.")
-                
+
                 # Extract data from each event
                 for event in event_wrappers:
                     try:
@@ -105,6 +100,7 @@ try:
                             location = "Everywhere"
                         else:
                             mode = "Offline"
+
                         start_date, end_date = parse_mlh_date(date_text)
 
                         event_data = {
@@ -116,8 +112,8 @@ try:
                             "mode": mode,
                             "source": "MLH"
                         }
-                        
-                        print(event_data)
+
+                        print(event_data)  # Print instead of storing
                         hackathons_list.append(event_data)
                     except Exception as e:
                         print(f"❌ Error extracting event data: {e}")
@@ -126,10 +122,6 @@ try:
 
         except Exception as e:
             print("⚠️ Skipping container due to missing elements:", e)
-    if hackathons_list:
-        collection.insert_many(hackathons_list)
-        print(f"✅ Successfully inserted {len(hackathons_list)} events into MongoDB.")
-
 
 finally:
     driver.quit()
