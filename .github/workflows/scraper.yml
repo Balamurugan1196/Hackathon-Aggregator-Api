@@ -25,8 +25,9 @@ jobs:
 
       - name: Run Scraper
         env:
-          MONGO_URI: ${{ secrets.MONGO_URI }}  # Add this as a GitHub Secret
-        run: python Scrapper.py  # Change to your script name
+          MONGO_USER: ${{ secrets.MONGO_USER }}  # Set this in GitHub Secrets
+          MONGO_PASS: ${{ secrets.MONGO_PASS }}  # Set this in GitHub Secrets
+        run: python Scrapper.py  # Ensure this is your script name
 
       - name: Notify on Failure
         if: failure()
