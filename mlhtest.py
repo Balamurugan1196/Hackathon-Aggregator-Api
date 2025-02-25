@@ -61,6 +61,7 @@ driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), opti
 # Open MLH hackathon page
 url = "https://mlh.io/seasons/2025/events"
 driver.get(url)
+print("opened the page")
 hackathons_list = []
 
 try:
