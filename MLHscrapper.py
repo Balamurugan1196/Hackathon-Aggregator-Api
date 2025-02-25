@@ -22,11 +22,18 @@ username = urllib.parse.quote_plus(os.getenv("MONGO_USER", ""))
 password = urllib.parse.quote_plus(os.getenv("MONGO_PASS", ""))
 
 # Connect to MongoDB Atlas
-client = MongoClient(
-    f"mongodb+srv://{username}:{password}@hackathondb.hwg5w.mongodb.net/?retryWrites=true&w=majority&appName=hackathondb"
-)
-db = client["hackathondb"]
-collection = db["events"]
+try:
+    client = MongoClient(
+        f"mongodb+srv://{username}:{password}@hackathondb.hwg5w.mongodb.net/?retryWrites=true&w=majority&appName=hackathondb",
+        serverSelectionTimeoutMS=5000  # Timeout for connection
+    )
+    client.server_info()  # Test connection
+    db = client["hackathondb"]
+    collection = db["events"]
+    logging.info("✅ Connected to MongoDB.")
+except Exception as e:
+    logging.error(f"❌ Failed to connect to MongoDB: {e}")
+    raise
 
 # Function to parse MLH event dates
 def parse_mlh_date(date_text):
@@ -56,14 +63,12 @@ def parse_mlh_date(date_text):
 # Function to scroll the page gradually
 def scroll_page(driver):
     last_height = driver.execute_script("return document.body.scrollHeight")
-    
     while True:
-        driver.execute_script("window.scrollBy(0, 500);")  # Scroll in smaller increments
+        driver.execute_script("window.scrollBy(0, 300);")  # Smaller scroll increments
         time.sleep(1)  # Allow time for loading
-
         new_height = driver.execute_script("return document.body.scrollHeight")
         if new_height == last_height:
-            break  # Stop scrolling if page height remains the same
+            break
         last_height = new_height
 
 # Chrome WebDriver Setup
@@ -71,6 +76,8 @@ chrome_options = Options()
 chrome_options.add_argument("--headless")  # Run in background
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
+chrome_options.add_argument("--disable-gpu")
+chrome_options.add_argument("--window-size=1920,1080")  # Set window size
 
 # Automatically download and use the correct ChromeDriver version
 service = Service(ChromeDriverManager().install())
@@ -80,14 +87,16 @@ try:
     # MLH Hackathon Page
     url = "https://mlh.io/seasons/2025/events"
     driver.get(url)
-    
+    logging.info(f"🌐 Opened MLH page: {url}")
+
     # Scroll down to load all elements
     scroll_page(driver)
+    logging.info("🖱️ Scrolled page to load all events.")
 
     hackathons_list = []
 
     # Wait for the main feature container to load
-    WebDriverWait(driver, 15).until(
+    WebDriverWait(driver, 30).until(  # Increased timeout
         EC.presence_of_all_elements_located((By.CLASS_NAME, "container feature"))
     )
 
