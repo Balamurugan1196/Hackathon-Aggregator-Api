@@ -27,16 +27,23 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y google-chrome-stable
-
-          # Fetch the correct ChromeDriver version
+          
+          # Fetch the installed Chrome version
           CHROME_VERSION=$(google-chrome --version | awk '{print $3}')
-          CHROMEDRIVER_VERSION=$(curl -sS https://googlechromelabs.github.io/chrome-for-testing/LATEST_RELEASE_$CHROME_VERSION)
+          echo "Installed Chrome Version: $CHROME_VERSION"
+          
+          # Fetch the correct ChromeDriver version
+          CHROMEDRIVER_VERSION=$(curl -s "https://googlechromelabs.github.io/chrome-for-testing/LATEST_RELEASE_$CHROME_VERSION")
+          echo "Matching ChromeDriver Version: $CHROMEDRIVER_VERSION"
           
           # Download and install ChromeDriver
-          wget -q "https://storage.googleapis.com/chrome-for-testing-public/${CHROMEDRIVER_VERSION}/linux64/chromedriver-linux64.zip"
-          unzip chromedriver-linux64.zip
+          wget -q "https://storage.googleapis.com/chrome-for-testing-public/${CHROMEDRIVER_VERSION}/linux64/chromedriver-linux64.zip" -O chromedriver.zip
+          unzip chromedriver.zip
           sudo mv chromedriver-linux64/chromedriver /usr/local/bin/chromedriver
           sudo chmod +x /usr/local/bin/chromedriver
+
+          # Verify installation
+          chromedriver --version
 
       - name: Run Scraper
         env:
