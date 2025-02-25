@@ -23,24 +23,10 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Set Up Chrome & ChromeDriver (Auto-Detect Compatible Version)
+      - name: Set Up Chrome & ChromeDriver
         run: |
           sudo apt-get update
           sudo apt-get install -y google-chrome-stable
-          
-          # Get installed Chrome version
-          CHROME_VERSION=$(google-chrome --version | grep -oP '[0-9]+\.[0-9]+\.[0-9]+')
-          echo "Detected Chrome version: $CHROME_VERSION"
-
-          # Fetch the matching ChromeDriver version
-          CHROMEDRIVER_VERSION=$(curl -s "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$CHROME_VERSION")
-          echo "Matching ChromeDriver version: $CHROMEDRIVER_VERSION"
-
-          # Download and install ChromeDriver
-          wget -q "https://chromedriver.storage.googleapis.com/$CHROMEDRIVER_VERSION/chromedriver_linux64.zip"
-          unzip chromedriver_linux64.zip
-          chmod +x chromedriver
-          sudo mv chromedriver /usr/local/bin/
 
       - name: Run Scraper
         env:
