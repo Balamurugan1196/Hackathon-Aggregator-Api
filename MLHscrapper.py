@@ -77,7 +77,7 @@ chrome_options.add_argument("--headless")  # Run in background
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 service = Service()  
-driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+driver = webdriver.Chrome(service=service, options=chrome_options)
 
 
 try:
@@ -93,62 +93,65 @@ try:
     hackathons_list = []
     time.sleep(3)
     
-    # Wait for the row element to appear
-    WebDriverWait(driver, 30).until(
-        EC.presence_of_element_located((By.XPATH, "/html/body/div[1]/div[3]/div[1]"))
+    # Wait for the main feature container to load
+    WebDriverWait(driver, 15).until(
+        EC.presence_of_all_elements_located((By.CLASS_NAME, "container.feature"))
     )
-    logging.info("✅ Row container found.")
 
-    # Now fetch the row element
-    row_element = driver.find_element(By.XPATH, "/html/body/div[1]/div[3]/div[1]")
+    # Find all container elements
+    feature_containers = driver.find_elements(By.CLASS_NAME, "container.feature")
 
-    # Find all event-wrapper elements inside the row
-    event_wrappers = row_element.find_elements(By.CLASS_NAME, "event-wrapper")
+    for container in feature_containers:
+        try:
+            row = container.find_element(By.CLASS_NAME, "row")
+            event_wrappers = row.find_elements(By.CLASS_NAME, "event-wrapper")
 
-    if event_wrappers:
-        logging.info(f"✅ Found {len(event_wrappers)} upcoming events.")
+            if event_wrappers:
+                logging.info(f"✅ Found {len(event_wrappers)} upcoming events.")
 
-        # Extract data from each event
-        for event in event_wrappers:
-            try:
-                name = event.find_element(By.CLASS_NAME, "event-name").text.strip()
-                date_text = event.find_element(By.CLASS_NAME, "event-date").text.strip()
-                location = event.find_element(By.CLASS_NAME, "event-location").text.strip()
-                website = event.find_element(By.TAG_NAME, "a").get_attribute("href")
-                
-                # Handle missing mode information
-                try:
-                    mode = event.find_element(By.CLASS_NAME, "event-hybrid-notes").text.strip()
-                except:
-                    mode = "Unknown"
+                # Extract data from each event
+                for event in event_wrappers:
+                    try:
+                        name = event.find_element(By.CLASS_NAME, "event-name").text.strip()
+                        date_text = event.find_element(By.CLASS_NAME, "event-date").text.strip()
+                        location = event.find_element(By.CLASS_NAME, "event-location").text.strip()
+                        website = event.find_element(By.TAG_NAME, "a").get_attribute("href")
 
-                # Adjust mode and location based on digital/physical
-                if mode == "Digital Only":
-                    mode = "Online"
-                    location = "Everywhere"
-                else:
-                    mode = "Offline"
+                        # Some events might not have mode information
+                        try:
+                            mode = event.find_element(By.CLASS_NAME, "event-hybrid-notes").text.strip()
+                        except:
+                            mode = "Unknown"
 
-                start_date, end_date = parse_mlh_date(date_text)
+                        # Adjust mode and location based on digital/physical
+                        if mode == "Digital Only":
+                            mode = "Online"
+                            location = "Everywhere"
+                        else:
+                            mode = "Offline"
 
-                event_data = {
-                    "name": name,
-                    "start_date": start_date,
-                    "end_date": end_date,
-                    "location": location,
-                    "apply_link": website,
-                    "mode": mode,
-                    "source": "MLH"
-                }
+                        start_date, end_date = parse_mlh_date(date_text)
 
-                hackathons_list.append(event_data)
-                logging.info(f"✔️ Event data extracted: {name}")
+                        event_data = {
+                            "name": name,
+                            "start_date": start_date,
+                            "end_date": end_date,
+                            "location": location,
+                            "apply_link": website,
+                            "mode": mode,
+                            "source": "MLH"
+                        }
 
-            except Exception as e:
-                logging.error(f"❌ Error extracting event data: {traceback.format_exc()}")
+                        hackathons_list.append(event_data)
+                        logging.info(f"✔️ Event data extracted: {name}")
 
-    else:
-        logging.warning("⚠️ No event elements found. The page structure might have changed.")
+                    except Exception as e:
+                        logging.error(f"❌ Error extracting event data: {traceback.format_exc()}")
+
+                break  # Stop searching after finding the first valid container with events
+
+        except Exception as e:
+            logging.warning("⚠️ Skipping container due to missing elements:", e)
 
     # MongoDB insertion logic
     if hackathons_list:
