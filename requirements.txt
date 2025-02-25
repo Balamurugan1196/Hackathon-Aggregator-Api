@@ -4,3 +4,4 @@ pymongo
 selenium
 gunicorn
 webdriver-manager
+undetected-chromedriver
