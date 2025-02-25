@@ -22,28 +22,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-
-      - name: Set Up Chrome & ChromeDriver
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y google-chrome-stable
-          
-          # Fetch the installed Chrome version
-          CHROME_VERSION=$(google-chrome --version | awk '{print $3}')
-          echo "Installed Chrome Version: $CHROME_VERSION"
-          
-          # Fetch the correct ChromeDriver version
-          CHROMEDRIVER_VERSION=$(curl -s "https://googlechromelabs.github.io/chrome-for-testing/LATEST_RELEASE_$CHROME_VERSION")
-          echo "Matching ChromeDriver Version: $CHROMEDRIVER_VERSION"
-          
-          # Download and install ChromeDriver
-          wget -q "https://storage.googleapis.com/chrome-for-testing-public/${CHROMEDRIVER_VERSION}/linux64/chromedriver-linux64.zip" -O chromedriver.zip
-          unzip chromedriver.zip
-          sudo mv chromedriver-linux64/chromedriver /usr/local/bin/chromedriver
-          sudo chmod +x /usr/local/bin/chromedriver
-
-          # Verify installation
-          chromedriver --version
+          pip install webdriver-manager  # Ensure webdriver-manager is installed
 
       - name: Run Scraper
         env:
