@@ -192,7 +192,8 @@ for event in events[:TARGET_COUNT]:
             "mode": mode,
             "location": location,
             "prize_money": prize,
-            "apply_link": apply_link
+            "apply_link": apply_link,
+            "Source":"Devpost"
         })
     except Exception as e:
         print(f"Skipping one event due to error: {e}")
