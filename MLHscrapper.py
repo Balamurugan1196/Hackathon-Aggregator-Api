@@ -95,79 +95,76 @@ try:
 
     hackathons_list = []
     time.sleep(3)
-    # Wait until at least 2 containers are loaded
+    
+    # Wait for the row element to appear
     WebDriverWait(driver, 30).until(
-    lambda d: len(d.find_elements(By.XPATH, "//*[contains(@class, 'container feature')]")) >= 2)
+        EC.presence_of_element_located((By.XPATH, "/html/body/div[1]/div[3]/div[1]"))
+    )
+    logging.info("✅ Row container found.")
 
-    # Find all container elements
-    feature_containers = driver.find_elements(By.CLASS_NAME, "container feature")
-    if feature_containers:
-        logging.info(f"✅ Found {len(feature_containers)} containers.")
+    # Now fetch the row element
+    row_element = driver.find_element(By.XPATH, "/html/body/div[1]/div[3]/div[1]")
+
+    # Find all event-wrapper elements inside the row
+    event_wrappers = row_element.find_elements(By.CLASS_NAME, "event-wrapper")
+
+    if event_wrappers:
+        logging.info(f"✅ Found {len(event_wrappers)} upcoming events.")
+
+        # Extract data from each event
+        for event in event_wrappers:
+            try:
+                name = event.find_element(By.CLASS_NAME, "event-name").text.strip()
+                date_text = event.find_element(By.CLASS_NAME, "event-date").text.strip()
+                location = event.find_element(By.CLASS_NAME, "event-location").text.strip()
+                website = event.find_element(By.TAG_NAME, "a").get_attribute("href")
+                
+                # Handle missing mode information
+                try:
+                    mode = event.find_element(By.CLASS_NAME, "event-hybrid-notes").text.strip()
+                except:
+                    mode = "Unknown"
+
+                # Adjust mode and location based on digital/physical
+                if mode == "Digital Only":
+                    mode = "Online"
+                    location = "Everywhere"
+                else:
+                    mode = "Offline"
+
+                start_date, end_date = parse_mlh_date(date_text)
+
+                event_data = {
+                    "name": name,
+                    "start_date": start_date,
+                    "end_date": end_date,
+                    "location": location,
+                    "apply_link": website,
+                    "mode": mode,
+                    "source": "MLH"
+                }
+
+                hackathons_list.append(event_data)
+                logging.info(f"✔️ Event data extracted: {name}")
+
+            except Exception as e:
+                logging.error(f"❌ Error extracting event data: {traceback.format_exc()}")
+
     else:
-        logging.warning("⚠️ No containers found on the page.")
-
-    for container in feature_containers:
-        try:
-            row = container.find_element(By.CLASS_NAME, "row")
-            event_wrappers = row.find_elements(By.CLASS_NAME, "event-wrapper")
-
-            if event_wrappers:
-                logging.info(f"✅ Found {len(event_wrappers)} upcoming events.")
-
-                # Extract data from each event
-                for event in event_wrappers:
-                    try:
-                        name = event.find_element(By.CLASS_NAME, "event-name").text.strip()
-                        date_text = event.find_element(By.CLASS_NAME, "event-date").text.strip()
-                        location = event.find_element(By.CLASS_NAME, "event-location").text.strip()
-                        website = event.find_element(By.TAG_NAME, "a").get_attribute("href")
-                        
-                        # Handle missing mode information
-                        try:
-                            mode = event.find_element(By.CLASS_NAME, "event-hybrid-notes").text.strip()
-                        except:
-                            mode = "Unknown"
-
-                        # Adjust mode and location based on digital/physical
-                        if mode == "Digital Only":
-                            mode = "Online"
-                            location = "Everywhere"
-                        else:
-                            mode = "Offline"
-
-                        start_date, end_date = parse_mlh_date(date_text)
-
-                        event_data = {
-                            "name": name,
-                            "start_date": start_date,
-                            "end_date": end_date,
-                            "location": location,
-                            "apply_link": website,
-                            "mode": mode,
-                            "source": "MLH"
-                        }
-
-                        hackathons_list.append(event_data)
-                        logging.info(f"✔️ Event data extracted: {name}")
-
-                    except Exception as e:
-                        logging.error(f"Error extracting event data: {traceback.format_exc()}")
-
-        except Exception as e:
-            logging.error(f"Error processing container: {traceback.format_exc()}")
+        logging.warning("⚠️ No event elements found. The page structure might have changed.")
 
     # MongoDB insertion logic
     if hackathons_list:
         for event in hackathons_list:
             if not collection.find_one({"name": event["name"], "start_date": event["start_date"]}):
                 collection.insert_one(event)
-        logging.info("Inserted %d events into MongoDB.", len(hackathons_list))
+        logging.info(f"✅ Inserted {len(hackathons_list)} events into MongoDB.")
     else:
-        logging.warning("No events found to insert.")
+        logging.warning("⚠️ No new events found to insert.")
 
 except Exception as e:
-    logging.error(f"An error occurred: {traceback.format_exc()}")
+    logging.error(f"❌ An error occurred: {traceback.format_exc()}")
 
 finally:
     driver.quit()
-    logging.info("WebDriver closed.")
+    logging.info("🚪 WebDriver closed.")
