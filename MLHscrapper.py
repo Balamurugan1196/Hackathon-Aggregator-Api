@@ -49,6 +49,18 @@ def parse_mlh_date(date_text):
             end_date = start_date
         return start_date, end_date
     return None, None
+def scroll_page():
+    last_height = driver.execute_script("return document.body.scrollHeight")
+    
+    while True:
+        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+        time.sleep(2)  # Allow time for loading
+
+        new_height = driver.execute_script("return document.body.scrollHeight")
+        if new_height == last_height:
+            break  # Stop scrolling if page height remains the same
+        last_height = new_height
+
 
 # Chrome WebDriver Setup
 chrome_options = Options()
@@ -63,7 +75,8 @@ driver = webdriver.Chrome(service=service, options=chrome_options)
 # MLH Hackathon Page
 url = "https://mlh.io/seasons/2025/events"
 driver.get(url)
-
+# Scroll down to load all elements
+scroll_page()
 hackathons_list = []
 
 # Wait for the main feature container to load
