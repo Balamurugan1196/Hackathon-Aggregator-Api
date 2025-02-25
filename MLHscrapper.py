@@ -94,9 +94,10 @@ try:
     logging.info("🖱️ Scrolled page to load all events.")
 
     hackathons_list = []
-
+    time.sleep(3)
     WebDriverWait(driver, 30).until(
-    lambda d: len(d.find_elements(By.CLASS_NAME, "container feature")) >= 2)
+    EC.presence_of_element_located((By.CLASS_NAME, "container feature"))
+)
 
 
     # Find all container elements
