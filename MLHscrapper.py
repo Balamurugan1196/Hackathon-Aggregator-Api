@@ -26,7 +26,7 @@ try:
         serverSelectionTimeoutMS=5000
     )
     client.server_info()  # Test connection
-    db = client["hackathondb"]
+    db = client["hackathonDB"]
     collection = db["events"]
     logging.info("✅ Connected to MongoDB.")
 except Exception as e:
