@@ -88,11 +88,11 @@ try:
 
     # Wait for the main feature container to load
     WebDriverWait(driver, 15).until(
-        EC.presence_of_all_elements_located((By.CLASS_NAME, "container.feature"))
+        EC.presence_of_all_elements_located((By.CLASS_NAME, "container feature"))
     )
 
     # Find all container elements
-    feature_containers = driver.find_elements(By.CLASS_NAME, "container.feature")
+    feature_containers = driver.find_elements(By.CLASS_NAME, "container feature")
     if feature_containers:
         logging.info(f"✅ Found {len(feature_containers)} containers.")
     else:
