@@ -77,7 +77,8 @@ chrome_options.add_argument("--headless")  # Run in background
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 service = Service()  
-driver = webdriver.Chrome(service=service, options=chrome_options)
+driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+
 
 try:
     # MLH Hackathon Page
