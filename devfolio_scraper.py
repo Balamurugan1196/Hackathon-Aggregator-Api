@@ -84,13 +84,8 @@ for card in cards:
 
 # Insert into MongoDB (Avoid Duplicates)
 if hackathon_list:
-    new_hackathons = 0
-    for hackathon in hackathon_list:
-        if not collection.find_one({"name": hackathon["name"], "source": "Devfolio"}):
-            collection.insert_one(hackathon)
-            new_hackathons += 1
-
-    logging.info(f"✅ Successfully stored {new_hackathons} new hackathons in MongoDB!")
+    collection.insert_many(hackathon_list)  # Use the correct list name
+    logging.info(f"✅ Successfully stored {len(hackathon_list)} new hackathons in MongoDB!")
 else:
     logging.error("❌ No hackathons extracted. Check for issues.")
 
