@@ -37,20 +37,24 @@ def get_driver(undetected=False):
         if undetected:
             import undetected_chromedriver as uc
             chrome_options = uc.ChromeOptions()
-            chrome_options.add_argument("--headless")
+            chrome_options.add_argument("--headless=new")  # Use new headless mode
             chrome_options.add_argument("--no-sandbox")
             chrome_options.add_argument("--disable-dev-shm-usage")
             chrome_options.add_argument("--disable-blink-features=AutomationControlled")  # Evade detection
-            chrome_options.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36")
-            driver = uc.Chrome(options=chrome_options)
+            chrome_options.add_argument(
+                "--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                "(KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36"
+            )
+
             print("🚀 Starting Undetected ChromeDriver...")
-            return uc.Chrome(options=options)
+            driver = uc.Chrome(options=chrome_options)
+            return driver  # ✅ Fixed return statement
 
         from selenium import webdriver
         from selenium.webdriver.chrome.options import Options
 
         options = Options()
-        options.add_argument("--headless")  # Run without opening browser
+        options.add_argument("--headless=new")  # Use latest headless mode
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
         options.add_argument("--disable-gpu")
@@ -58,7 +62,7 @@ def get_driver(undetected=False):
 
         print("🚀 Starting Standard ChromeDriver...")
         return webdriver.Chrome(options=options)
-    
+
     except Exception as e:
         print(f"❌ Error: WebDriver failed to start! Details: {str(e)}")
-        return None  # Return None to handle failure gracefully
+        return None  # Handle failure gracefully
