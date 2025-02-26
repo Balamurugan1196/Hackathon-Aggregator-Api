@@ -5,3 +5,4 @@ selenium
 gunicorn
 webdriver-manager
 undetected-chromedriver
+python-dotenv
