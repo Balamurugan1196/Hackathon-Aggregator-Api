@@ -185,6 +185,8 @@ def run_devpost_scraper():
 
     # Insert Data into MongoDB
     if scraped_events:
+        collection.delete_many({})  # Delete existing data
+        logging.info("Deleted existing hackathon data. Storing fresh data.")
         collection.insert_many(scraped_events)
         logging.info(f"{len(scraped_events)} hackathons stored in MongoDB successfully! 🚀")
 
