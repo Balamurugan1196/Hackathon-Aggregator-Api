@@ -35,8 +35,12 @@ def get_driver(undetected=False):
     """
     if undetected:
         import undetected_chromedriver as uc
-        return uc.Chrome()
-
+        options = uc.ChromeOptions()
+        options.add_argument("--headless=new")  # Use --headless=new for latest Chrome
+        options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
+        return uc.Chrome(options=options)
+        
     from selenium import webdriver
     from selenium.webdriver.chrome.options import Options
 
