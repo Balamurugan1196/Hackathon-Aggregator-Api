@@ -31,19 +31,17 @@ wait = WebDriverWait(driver, 10)  # Set explicit wait
 
 # Function to Auto-Scroll & Load More Hackathons
 def auto_scroll():
-    last_height = driver.execute_script("return document.body.scrollHeight")
     previous_count = 0
-
     while True:
         driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-        time.sleep(3)  # Wait for new content
-
-        # Get number of hackathons loaded
+        time.sleep(4)  # Adjust wait time
+        
         cards = driver.find_elements(By.XPATH, '//*[@id="__next"]/div[2]/div[2]/div/div/div')
         current_count = len(cards)
 
-        if current_count == previous_count:  # Stop when no new items load
-            break
+        if current_count <= previous_count:
+            break  # Stop when no new items load
+
         previous_count = current_count
 
     print(f"✅ Total Hackathons Loaded: {current_count}")
