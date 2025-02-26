@@ -20,7 +20,7 @@ mongodb_url = f"mongodb+srv://{username}:{password}@hackathondb.hwg5w.mongodb.ne
 try:
     client = MongoClient(mongodb_url)
     db = client["hackathonDB"]
-    collection = db["events"]
+    collection = db["hackathons"]
     print("✅ Connected to MongoDB successfully!")
 except Exception as e:
     raise Exception(f"❌ MongoDB Connection Failed: {str(e)}")
