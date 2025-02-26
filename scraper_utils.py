@@ -33,20 +33,32 @@ def get_driver(undetected=False):
     Returns a Selenium WebDriver.
     If `undetected=True`, use undetected_chromedriver (MLH Scraper needs this).
     """
-    if undetected:
-        import undetected_chromedriver as uc
-        options = uc.ChromeOptions()
-        options.add_argument("--headless=new")  # Use --headless=new for latest Chrome
+    try:
+        if undetected:
+            import undetected_chromedriver as uc
+            options = uc.ChromeOptions()
+            options.add_argument("--headless=new")  # Latest headless mode
+            options.add_argument("--no-sandbox")
+            options.add_argument("--disable-dev-shm-usage")
+            options.add_argument("--disable-gpu")
+            options.add_argument("--remote-debugging-port=9222")  # Fix for GitHub Actions
+            
+            print("🚀 Starting Undetected ChromeDriver...")
+            return uc.Chrome(options=options)
+
+        from selenium import webdriver
+        from selenium.webdriver.chrome.options import Options
+
+        options = Options()
+        options.add_argument("--headless")  # Run without opening browser
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
-        return uc.Chrome(options=options)
-        
-    from selenium import webdriver
-    from selenium.webdriver.chrome.options import Options
+        options.add_argument("--disable-gpu")
+        options.add_argument("--remote-debugging-port=9222")
 
-    options = Options()
-    options.add_argument("--headless")  # Run without opening browser
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
-
-    return webdriver.Chrome(options=options)
+        print("🚀 Starting Standard ChromeDriver...")
+        return webdriver.Chrome(options=options)
+    
+    except Exception as e:
+        print(f"❌ Error: WebDriver failed to start! Details: {str(e)}")
+        return None  # Return None to handle failure gracefully
