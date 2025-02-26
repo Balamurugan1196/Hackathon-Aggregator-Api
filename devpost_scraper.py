@@ -178,7 +178,7 @@ def run_devpost_scraper():
                 "location": location,
                 "prize_money": prize,
                 "apply_link": apply_link,
-                "Source": "Devpost"
+                "source": "Devpost"
             })
         except Exception as e:
             logging.error(f"Skipping one event due to error: {e}")
