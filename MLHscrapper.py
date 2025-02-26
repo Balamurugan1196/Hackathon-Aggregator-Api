@@ -72,7 +72,7 @@ try:
     driver.get(url)
     logging.info(f"🌐 Opened MLH page: {url}")
     
-    logging.info("🖱️ Scrolled page to load all events.")
+    
     
     WebDriverWait(driver, 15).until(
         EC.presence_of_all_elements_located((By.CLASS_NAME, "container.feature"))
