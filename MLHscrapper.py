@@ -57,15 +57,6 @@ def parse_mlh_date(date_text):
     return None, None
 
 # Function to scroll gradually
-def scroll_page(driver):
-    last_height = driver.execute_script("return document.body.scrollHeight")
-    for _ in range(10):  # Multiple scrolls
-        driver.execute_script("window.scrollBy(0, 500);")
-        time.sleep(random.uniform(2, 5))  # Randomized delay
-        new_height = driver.execute_script("return document.body.scrollHeight")
-        if new_height == last_height:
-            break
-        last_height = new_height
 
 # Chrome WebDriver Setup with Stealth Mode
 chrome_options = uc.ChromeOptions()
@@ -80,9 +71,9 @@ try:
     url = "https://mlh.io/seasons/2025/events"
     driver.get(url)
     logging.info(f"🌐 Opened MLH page: {url}")
-    scroll_page(driver)
+    
     logging.info("🖱️ Scrolled page to load all events.")
-    time.sleep(3)
+    
     WebDriverWait(driver, 15).until(
         EC.presence_of_all_elements_located((By.CLASS_NAME, "container.feature"))
     )
