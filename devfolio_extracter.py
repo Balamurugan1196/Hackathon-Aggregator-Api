@@ -31,16 +31,22 @@ wait = WebDriverWait(driver, 10)  # Set explicit wait
 
 # Function to Auto-Scroll & Load More Hackathons
 def auto_scroll():
+    last_height = driver.execute_script("return document.body.scrollHeight")
     previous_count = 0
-    while True:
-        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-        time.sleep(4)  # Adjust wait time
+    max_attempts = 10  # Limit retries to prevent infinite loops
+
+    while max_attempts > 0:
+        driver.execute_script("window.scrollBy(0, window.innerHeight);")  # Scroll down a bit
+        time.sleep(3)  # Wait for new content to load
         
+        # Get number of hackathons loaded
         cards = driver.find_elements(By.XPATH, '//*[@id="__next"]/div[2]/div[2]/div/div/div')
         current_count = len(cards)
 
-        if current_count <= previous_count:
-            break  # Stop when no new items load
+        if current_count == previous_count:  # Stop if no new items are loaded
+            max_attempts -= 1  # Reduce attempts and try again
+        else:
+            max_attempts = 10  # Reset attempts if new items load
 
         previous_count = current_count
 
@@ -48,6 +54,7 @@ def auto_scroll():
 
 # Start Scrolling
 auto_scroll()
+
 
 # Extract Hackathon Details
 hackathon_list = []
