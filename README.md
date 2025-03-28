@@ -15,10 +15,10 @@ The scraper runs as a scheduled **GitHub Action**, ensuring that the data remain
 
 ## 🛠 Features ##  
 
-- 🔹 **Automated Scraping** – Hackathon data is scraped daily using Selenium & GitHub Actions  
-- 🔹 **Real-time Updates** – The database is updated automatically, ensuring fresh data  
-- 🔹 **Powerful API** – Retrieve, search, and filter hackathons based on multiple parameters  
-- 🔹 **Efficient Storage** – Uses MongoDB for fast and scalable data retrieval  
+🔹 **Automated Scraping** – Hackathon data is scraped daily using Selenium & GitHub Actions  
+🔹 **Real-time Updates** – The database is updated automatically, ensuring fresh data  
+🔹 **Powerful API** – Retrieve, search, and filter hackathons based on multiple parameters  
+🔹 **Efficient Storage** – Uses MongoDB for fast and scalable data retrieval  
 
 ---
 
